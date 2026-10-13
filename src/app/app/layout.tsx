@@ -12,6 +12,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const navItems: NavItem[] = [
     { href: "/app", label: fr.nav.dashboard, exact: true },
     { href: "/app/catalog", label: fr.nav.catalog },
+    { href: "/app/stock", label: fr.nav.stock },
     ...(can(membership.role, "suppliers.manage") ? [{ href: "/app/suppliers", label: fr.nav.suppliers }] : []),
     { href: "/app/settings", label: fr.nav.settings, also: ["/app/profile"] },
   ];

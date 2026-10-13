@@ -23,6 +23,15 @@ describe("UI permission matrix (mirrors database rules)", () => {
     expect(can("manager", "catalog.import")).toBe(true);
   });
 
+  it("cashiers count and propose adjustments, but never approve or receive stock", () => {
+    expect(can("cashier", "stock.count.record")).toBe(true);
+    expect(can("cashier", "stock.adjust.propose")).toBe(true);
+    expect(can("cashier", "stock.adjust.review")).toBe(false);
+    expect(can("cashier", "stock.receive")).toBe(false);
+    expect(can("cashier", "stock.valuation")).toBe(false);
+    expect(can("manager", "stock.adjust.review")).toBe(true);
+  });
+
   it("invitable roles never include owner", () => {
     expect(invitableRoles("owner")).toEqual(["manager", "cashier"]);
     expect(invitableRoles("manager")).toEqual(["cashier"]);

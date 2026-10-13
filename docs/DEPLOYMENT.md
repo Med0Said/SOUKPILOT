@@ -87,10 +87,12 @@ Never run `supabase/seed.sql` in production.
   cookies and headers before sending.
 - Health check: planned (`/api/health` checking DB reachability) in M7.
 
-## Investigating an incorrect stock balance (from M3)
+## Investigating an incorrect stock balance
 
-1. Run the reconciliation query (stock_levels vs. SUM(stock_movements)) for the
-   variant/location.
+1. As owner/manager, run `select * from public.check_stock_reconciliation('<org id>')`
+   (or in SQL as the database owner). It must return no rows; any row means the
+   balance and the ledger disagree for that (location, variant) — treat as a
+   critical defect and keep the evidence (do not "fix" the balance by hand).
 2. List movements by `created_at` with `source_type/source_id` and `actor_id`;
    compare with the documents (sales, receipts, counts).
 3. Check `audit_logs` for adjustments/approvals around the time of drift.

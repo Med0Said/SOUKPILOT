@@ -156,7 +156,14 @@ export default async function ProductPage({
               <VariantEditor organizationId={orgId} productId={product.id} optionNames={product.option_names} />
             </Card>
           ) : null}
-          <p className="text-xs text-muted">{t.stockLater}</p>
+          {product.track_stock ? (
+            <Link
+              href={`/app/stock?q=${encodeURIComponent(product.name)}`}
+              className="inline-block text-sm text-primary underline-offset-4 hover:underline"
+            >
+              {t.stockLink} →
+            </Link>
+          ) : null}
         </section>
       </div>
     </>

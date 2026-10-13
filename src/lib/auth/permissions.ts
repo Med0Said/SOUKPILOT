@@ -18,6 +18,17 @@ export const PERMISSIONS = {
   "catalog.viewCosts": ["owner", "manager"],
   "catalog.import": ["owner", "manager"],
   "suppliers.manage": ["owner", "manager"],
+  /** Stock quantities and movement history. */
+  "stock.view": ["owner", "manager", "cashier"],
+  /** Receipts and opening stock carry purchase costs. */
+  "stock.receive": ["owner", "manager"],
+  "stock.transfer": ["owner", "manager"],
+  /** Anyone may propose an adjustment or count items; only owner/manager approve. */
+  "stock.adjust.propose": ["owner", "manager", "cashier"],
+  "stock.adjust.review": ["owner", "manager"],
+  "stock.count.manage": ["owner", "manager"],
+  "stock.count.record": ["owner", "manager", "cashier"],
+  "stock.valuation": ["owner", "manager"],
 } as const satisfies Record<string, readonly OrgRole[]>;
 
 export type Permission = keyof typeof PERMISSIONS;

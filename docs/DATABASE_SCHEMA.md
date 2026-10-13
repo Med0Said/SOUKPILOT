@@ -106,6 +106,60 @@ Errors from constraints are translated to stable keys (`duplicate_sku`,
 `invalid_reference`, `invalid_product`, `import_*`); for import commits the
 offending product name is returned in `details`.
 
+## 2c. Inventory (implemented, Milestone 3)
+
+```
+stock_receipts ─┐  stock_adjustments (opening | adjustment) ─┐  stock_counts ─┐  stock_transfers ─┐
+  lines (+cost) │    lines (signed delta)                    │   items        │   lines           │
+                └──────────────┬─────────────────────────────┴────────────────┴───────────────────┘
+                               ▼  private.apply_stock_lines()  (the ONLY write path)
+              stock_movements (append-only ledger)  +  stock_levels (balance, CHECK quantity >= 0)
+```
+
+**Invariants (all tested, several on a real PostgreSQL server under concurrency):**
+
+1. `stock_levels.quantity = SUM(stock_movements.quantity_delta)` per (location, variant), and the
+   last movement's `quantity_after` equals the balance — `check_stock_reconciliation(org)` returns
+   the rows where this does not hold (must be empty).
+2. Stock is never negative: checked before writing (`insufficient_stock`, with the product name
+   and available quantity in `details`) **and** by `CHECK (quantity >= 0)`.
+3. Concurrency: each line locks its `stock_levels` row (`SELECT … FOR UPDATE`) in a global order
+   `(variant_id, location_id)`; the preceding `INSERT … ON CONFLICT DO NOTHING` also waits on a row
+   being changed by another transaction. Two withdrawals of the last units → exactly one succeeds.
+   Opposite transfers of several variants run in parallel without deadlocks.
+4. The ledger is immutable: no INSERT/UPDATE/DELETE grant for API roles, and a trigger rejects
+   UPDATE/DELETE for everyone (`stock_ledger_immutable`). Corrections are new movements.
+5. A document line is applied at most once: `unique (source_type, source_id, variant_id, location_id, movement_type)`.
+6. Idempotency: every posting function takes an idempotency key, unique per organization and
+   document type. A replay — even concurrent — returns the existing document.
+7. Document numbers are per organization and type, gap-free (`document_sequences`, row-locked,
+   rolled back with the transaction). Displayed as REC-/AJU-/INV-/TRF-000001.
+8. `stock_movements.seq` (identity) gives the true application order; `created_at` is the
+   transaction start time and is only for display.
+
+| Function | Who | Effect |
+| --- | --- | --- |
+| `post_stock_receipt(org, location, supplier?, reference, note, lines, update_costs, key)` | owner/manager | `purchase_receipt` movements; optional update of variant purchase costs |
+| `record_opening_stock(org, location, lines, key)` | owner/manager | `opening` movements; refused if the variant already has a movement at that location |
+| `create_stock_adjustment(org, location, reason, lines, key)` | any member | creates a **pending** adjustment (no stock change) |
+| `review_stock_adjustment(id, approve, note)` | owner/manager | approve → `adjustment` movements with the reason; reject → nothing |
+| `create_stock_count(org, location, note, variant_ids?, key)` | owner/manager | count sheet (all tracked active variants by default); one open count per location |
+| `record_stock_count(count, items)` | any member | stores counted quantity **and the book quantity at that moment** |
+| `submit_stock_count` / `review_stock_count(approve)` / `cancel_stock_count` | member / owner-manager | approve applies `counted − expected` for counted items only; reject returns to counting |
+| `post_stock_transfer(org, from, to, note, lines, key)` | owner/manager | `transfer_out` + `transfer_in` in one transaction |
+| `search_variants`, `stock_overview` | any member (RLS) | variant picker; stock on hand with low-stock flag |
+| `stock_valuation(org, location?)` | owner/manager | Σ quantity × current purchase cost (estimate); counts variants without cost |
+| `check_stock_reconciliation(org)` | owner/manager | integrity check (see invariant 1) |
+
+**Definitions.** *Stock on hand* = sum of balances at active locations (or one location).
+*Low stock* = stock on hand ≤ the variant's `low_stock_threshold` (no threshold = never low).
+*Valuation* = Σ quantity × **current** purchase cost — an estimate, not FIFO/weighted-average
+accounting. Sale (`sale`, `customer_return`) and `supplier_return` movement types exist but are
+only produced from Milestones 4–5.
+
+**Visibility.** Quantities, movements, adjustments, counts and transfers: every member.
+Receipts and opening costs (they contain purchase costs): owner/manager only.
+
 ## 3. Tenant isolation strategy
 
 1. RLS on every table; policies reference only `auth.uid()` through
@@ -121,23 +175,7 @@ offending product name is returned in `details`.
 
 Catalog (M2) is implemented — see §2b.
 
-### Inventory (M3)
-- `stock_movements` — **append-only ledger** (no UPDATE/DELETE grants):
-  `(id, organization_id, location_id, variant_id, quantity_delta int ≠ 0, movement_type, source_type, source_id, unit_cost_millimes, reason, actor_id, created_at)`
-  - `movement_type ∈ opening, purchase_receipt, sale, customer_return, supplier_return, adjustment, transfer_out, transfer_in`
-  - unique `(organization_id, source_type, source_id, variant_id, location_id, movement_type)` where source is set → a document can never be applied twice
-  - `reason` required when `movement_type = 'adjustment'`
-- `stock_levels (organization_id, location_id, variant_id, quantity int CHECK (quantity >= 0), updated_at)` PK `(location_id, variant_id)`
-  - only written by the same function that inserts the movement, in the same
-    transaction, after `SELECT … FOR UPDATE` on the row (locks in a fixed order
-    by variant_id to avoid deadlocks) → two concurrent sales cannot both take
-    the last unit; the CHECK is the last line of defence.
-  - reconciliation query (and a test): `stock_levels.quantity = SUM(quantity_delta)` per (location, variant).
-- `stock_counts (id, organization_id, location_id, status draft→submitted→approved|cancelled, counted_by, approved_by)` and
-  `stock_count_items (count_id, variant_id, expected_qty snapshot, counted_qty)`.
-  Approval creates one `adjustment` movement per non-zero difference.
-- Valuation (M3/M6): quantity × current variant cost (documented as an
-  estimate; weighted-average costing considered later).
+Inventory (M3) is implemented — see §2c.
 
 ### Sales (M4)
 - `sales (id, organization_id, location_id, number, status draft|finalized|cancelled, customer_id?, subtotal, discount_total, total, paid_total, idempotency_key uuid, finalized_at, finalized_by)`
@@ -171,7 +209,7 @@ Catalog (M2) is implemented — see §2b.
 | --- | --- |
 | Create organization | `create_organization()` |
 | Membership / invitation changes | the respective function |
-| Stock adjustment, count approval, transfer | one function each (M3) |
+| Receipt, opening stock, adjustment approval, count approval, transfer | one function each (M3) |
 | Finalize sale, record payment, return | one function each (M4) |
 | Goods receipt | one function (M5) |
 

@@ -10,6 +10,15 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type OrgRole = "owner" | "manager" | "cashier";
 export type InvitationStatus = "pending" | "accepted" | "declined" | "revoked";
 export type LocaleCode = "fr" | "ar";
+export type StockMovementType =
+  | "opening"
+  | "purchase_receipt"
+  | "sale"
+  | "customer_return"
+  | "supplier_return"
+  | "adjustment"
+  | "transfer_out"
+  | "transfer_in";
 
 export type Database = {
   __InternalSupabase: {
@@ -248,6 +257,137 @@ export type Database = {
         Update: never;
         Relationships: [];
       };
+      stock_levels: {
+        Row: { organization_id: string; location_id: string; variant_id: string; quantity: number; updated_at: string };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      stock_movements: {
+        Row: {
+          id: string;
+          seq: number;
+          organization_id: string;
+          location_id: string;
+          variant_id: string;
+          quantity_delta: number;
+          quantity_after: number;
+          movement_type: StockMovementType;
+          source_type: string;
+          source_id: string;
+          reason: string | null;
+          actor_id: string | null;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      stock_receipts: {
+        Row: {
+          id: string;
+          organization_id: string;
+          number: number;
+          location_id: string;
+          supplier_id: string | null;
+          reference: string | null;
+          note: string | null;
+          idempotency_key: string;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      stock_receipt_lines: {
+        Row: { receipt_id: string; organization_id: string; variant_id: string; quantity: number; unit_cost_millimes: number | null };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      stock_adjustments: {
+        Row: {
+          id: string;
+          organization_id: string;
+          number: number;
+          kind: "opening" | "adjustment";
+          status: "pending" | "approved" | "rejected";
+          location_id: string;
+          reason: string;
+          idempotency_key: string;
+          created_by: string | null;
+          created_at: string;
+          reviewed_by: string | null;
+          reviewed_at: string | null;
+          review_note: string | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      stock_adjustment_lines: {
+        Row: { adjustment_id: string; organization_id: string; variant_id: string; quantity_delta: number };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      stock_counts: {
+        Row: {
+          id: string;
+          organization_id: string;
+          number: number;
+          location_id: string;
+          status: "in_progress" | "submitted" | "approved" | "cancelled";
+          note: string | null;
+          idempotency_key: string;
+          created_by: string | null;
+          created_at: string;
+          submitted_by: string | null;
+          submitted_at: string | null;
+          reviewed_by: string | null;
+          reviewed_at: string | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      stock_count_items: {
+        Row: {
+          count_id: string;
+          organization_id: string;
+          variant_id: string;
+          expected_quantity: number | null;
+          counted_quantity: number | null;
+          counted_by: string | null;
+          counted_at: string | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      stock_transfers: {
+        Row: {
+          id: string;
+          organization_id: string;
+          number: number;
+          from_location_id: string;
+          to_location_id: string;
+          note: string | null;
+          idempotency_key: string;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      stock_transfer_lines: {
+        Row: { transfer_id: string; organization_id: string; variant_id: string; quantity: number };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       audit_logs: {
         Row: {
           id: string;
@@ -365,10 +505,120 @@ export type Database = {
         Args: { p_batch_id: string };
         Returns: Json;
       };
+      post_stock_receipt: {
+        Args: {
+          p_organization_id: string;
+          p_location_id: string;
+          p_supplier_id: string | null;
+          p_reference: string | null;
+          p_note: string | null;
+          p_lines: Json;
+          p_update_costs: boolean;
+          p_idempotency_key: string;
+        };
+        Returns: string;
+      };
+      record_opening_stock: {
+        Args: { p_organization_id: string; p_location_id: string; p_lines: Json; p_idempotency_key: string };
+        Returns: string;
+      };
+      create_stock_adjustment: {
+        Args: { p_organization_id: string; p_location_id: string; p_reason: string; p_lines: Json; p_idempotency_key: string };
+        Returns: string;
+      };
+      review_stock_adjustment: {
+        Args: { p_adjustment_id: string; p_approve: boolean; p_note?: string | null };
+        Returns: undefined;
+      };
+      create_stock_count: {
+        Args: {
+          p_organization_id: string;
+          p_location_id: string;
+          p_note: string | null;
+          p_variant_ids: string[] | null;
+          p_idempotency_key: string;
+        };
+        Returns: string;
+      };
+      record_stock_count: {
+        Args: { p_count_id: string; p_items: Json };
+        Returns: number;
+      };
+      submit_stock_count: { Args: { p_count_id: string }; Returns: undefined };
+      review_stock_count: { Args: { p_count_id: string; p_approve: boolean }; Returns: number };
+      cancel_stock_count: { Args: { p_count_id: string }; Returns: undefined };
+      post_stock_transfer: {
+        Args: {
+          p_organization_id: string;
+          p_from_location_id: string;
+          p_to_location_id: string;
+          p_note: string | null;
+          p_lines: Json;
+          p_idempotency_key: string;
+        };
+        Returns: string;
+      };
+      search_variants: {
+        Args: { p_organization_id: string; p_query: string; p_location_id?: string | null; p_limit?: number };
+        Returns: {
+          variant_id: string;
+          product_id: string;
+          product_name: string;
+          option_values: string[];
+          sku: string | null;
+          barcode: string | null;
+          price_millimes: number;
+          track_stock: boolean;
+          quantity: number;
+        }[];
+      };
+      stock_overview: {
+        Args: {
+          p_organization_id: string;
+          p_location_id?: string | null;
+          p_query?: string;
+          p_low_only?: boolean;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: {
+          variant_id: string;
+          product_id: string;
+          product_name: string;
+          option_values: string[];
+          sku: string | null;
+          barcode: string | null;
+          quantity: number;
+          low_stock_threshold: number | null;
+          is_low: boolean;
+          total_count: number;
+        }[];
+      };
+      stock_valuation: {
+        Args: { p_organization_id: string; p_location_id?: string | null };
+        Returns: {
+          total_quantity: number;
+          valued_quantity: number;
+          total_value_millimes: number;
+          variants_in_stock: number;
+          variants_without_cost: number;
+        }[];
+      };
+      check_stock_reconciliation: {
+        Args: { p_organization_id: string };
+        Returns: {
+          location_id: string;
+          variant_id: string;
+          level_quantity: number | null;
+          ledger_quantity: number | null;
+          last_quantity_after: number | null;
+        }[];
+      };
     };
     Enums: {
       org_role: OrgRole;
       invitation_status: InvitationStatus;
+      stock_movement_type: StockMovementType;
     };
     CompositeTypes: { [_ in never]: never };
   };

@@ -114,11 +114,27 @@ MVP (clothing, cosmetics, general goods are sold by the piece).
 *Rounding*: line totals are computed in integers; percentage discounts round
 half away from zero to the millime, applied per line; documented and tested in M4.
 
-### ADR-006 Stock = append-only ledger + locked balance table (planned, M3)
-See docs/DATABASE_SCHEMA.md §4. `stock_movements` is the source of truth;
-`stock_levels` is a per (location, variant) balance updated in the same
-transaction under a row lock, with `CHECK (quantity >= 0)`. A reconciliation
-query proves `stock_levels = SUM(stock_movements)`.
+### ADR-006 Stock = append-only ledger + locked balance table (implemented, M3)
+`stock_movements` is the source of truth; `stock_levels` is a per (location,
+variant) balance updated by a single function (`private.apply_stock_lines`) in
+the same transaction, under row locks taken in a fixed order, with
+`CHECK (quantity >= 0)`. `check_stock_reconciliation` proves
+`stock_levels = SUM(stock_movements)`. See docs/DATABASE_SCHEMA.md §2c.
+*Why a balance table and not only SUM()*: it gives a row to lock (no
+overselling under concurrency) and O(1) stock lookups on mobile.
+*Testing note*: a naive "two requests at once" test did not catch a removed
+lock; the tests now hold the first transaction open (`pg_sleep`) so the overlap
+is guaranteed. Mutation-checked: removing serialization makes them fail.
+
+### ADR-013 Adjustments need approval; counts are blind and snapshot per item
+*Decision*: any member can propose an adjustment or count items; only
+owner/manager apply them. Counters do not see the book quantity. Each counted
+item stores the book quantity *at the moment it is counted*; approval applies
+`counted − expected`, so sales/receipts after counting are preserved, and
+uncounted items are never zeroed.
+*Trade-off*: if goods move between the physical count and the entry of that
+item, the difference is attributed to the count. Shops should enter counts as
+they go (mobile sheet) — documented in the UI.
 
 ### ADR-007 Active organization is a cookie *preference*, re-validated on every request
 The `sp_active_org` cookie (httpOnly, SameSite=Lax) only selects among the

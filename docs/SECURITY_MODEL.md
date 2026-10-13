@@ -64,6 +64,11 @@ Last updated 2026-10-13 (Milestone 1).
 | Create/edit products, variants, categories; import CSV | ✓ | ✓ | – |
 | See purchase costs | ✓ | ✓ | – |
 | Suppliers (read and write) | ✓ | ✓ | – |
+| See stock quantities and movement history | ✓ | ✓ | ✓ |
+| Receive stock, record opening stock (with costs), transfer | ✓ | ✓ | – |
+| Propose adjustments, enter stock counts | ✓ | ✓ | ✓ |
+| Approve adjustments and counts, start/cancel counts | ✓ | ✓ | – |
+| Stock valuation, reconciliation check | ✓ | ✓ | – |
 
 Invariants: nobody changes their own role; owners cannot be invited (only
 promoted by an owner); an organization always keeps ≥ 1 owner (trigger).
@@ -157,6 +162,11 @@ npm run test:db:pg   # same suite on a real PostgreSQL server (adds concurrency 
 cashiers never read costs, other tenants see nothing, no cross-tenant
 category/product references, audited price changes, search isolation, import
 authorization and idempotency (two simultaneous commits → exactly one import).
+`tests/db/inventory.test.ts` covers the stock ledger: role rules, cross-tenant
+refusal (even with the attacker's own organization id), immutability, no
+negative stock, idempotent documents, and — on a real server — forced
+concurrent withdrawals, duplicate receipts, duplicate opening stock and
+opposite transfers.
 
 `tests/db/tenant-isolation.test.ts` builds two organizations (owner, manager,
 cashier in A; owner in B; plus an outsider) and checks, through the

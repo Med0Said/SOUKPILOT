@@ -1,7 +1,7 @@
 # SoukPilot — Development Roadmap & Status
 
 Planning estimate, not a guarantee. Security and financial-integrity defects
-take priority over the schedule. Last updated 2026-10-14.
+take priority over the schedule. Last updated 2026-10-15.
 
 Legend: ✅ done & tested · 🟡 partial · ⬜ not started · ⛔ blocked (needs something outside the repo)
 
@@ -20,7 +20,7 @@ Legend: ✅ done & tested · 🟡 partial · ⬜ not started · ⛔ blocked (nee
 | Generated DB types vs hand-written | ⛔ | Needs `supabase start` (Docker) |
 | E2E tests (Playwright) | ⛔ | Need a running Supabase Auth to sign in; not started |
 
-## Milestone 2 — Catalog (current)
+## Milestone 2 — Catalog
 
 | Item | Status | Notes |
 | --- | --- | --- |
@@ -39,8 +39,24 @@ Legend: ✅ done & tested · 🟡 partial · ⬜ not started · ⛔ blocked (nee
 | Import updates of existing products | ⬜ | Import only creates; updating via CSV needs an explicit, reviewed "update mode" |
 | UI exercised end-to-end with a signed-in user | ⛔ | Same blocker as M1 auth |
 
-## Milestone 3 — Inventory
-⬜ stock ledger, stock levels with row locking, opening stock (incl. from import), adjustments with reason + approval, stock counts (mobile), movement history, low-stock alerts (thresholds already stored), concurrency tests (the real-PostgreSQL runner now makes these possible), reconciliation check.
+## Milestone 3 — Inventory (current)
+
+| Item | Status | Notes |
+| --- | --- | --- |
+| Append-only stock ledger + locked balances | ✅ | Single write path, `CHECK (quantity >= 0)`, immutable ledger; mutation-tested |
+| Goods receipt (without purchase order) | ✅ | Idempotent, numbered, optional cost update; owner/manager |
+| Opening stock | ✅ | Once per variant and location, race-safe |
+| Adjustments with reason, review and approval | ✅ | Any member proposes; owner/manager approve/reject |
+| Stock counts (mobile, blind) | ✅ | Per-item book snapshot; approval applies differences only for counted items |
+| Transfers between locations | ✅ | Atomic out + in; deadlock-free ordering tested |
+| Stock by variant / location, low-stock alerts | ✅ | Overview page + dashboard card (live data) |
+| Movement history | ✅ | Filters by article, location, type |
+| Stock valuation (estimate at current cost) | ✅ | Owner/manager only |
+| Reconciliation check | ✅ | `check_stock_reconciliation`; asserted after concurrency tests |
+| Concurrency tests on real PostgreSQL | ✅ | Forced overlap (first transaction held open) |
+| Opening stock from CSV import | ⬜ | Import creates products only; opening stock is entered per location afterwards |
+| Negative-stock override setting | ⬜ | Not offered (spec: no negative stock by default) |
+| Stock UI exercised with a signed-in user | ⛔ | Same blocker as M1/M2 (needs Supabase Auth) |
 
 ## Milestone 4 — Sales
 ⬜ draft sales, server-side totals/discounts, idempotent finalize, payments (partial), returns/cancellations as reversal documents, printable internal receipt, payment methods, document numbering, cost snapshot per sale item (costs table ready).

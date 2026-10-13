@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GENERIC_ERROR, messageForAuthError, messageForDbError } from "./errors";
+import { GENERIC_ERROR, messageForAuthError, messageForDbError, messageWithDetail } from "./errors";
 import { redactForLog } from "./logger";
 
 describe("error mapping", () => {
@@ -21,6 +21,13 @@ describe("error mapping", () => {
       }),
     ).toMatch(/SKU/);
     expect(messageForDbError({ code: "23514", message: 'violates check constraint "x"' })).toMatch(/invalides/);
+  });
+
+  it("appends the product detail for stock errors only", () => {
+    expect(messageWithDetail({ message: "insufficient_stock", details: "Chemise (S) — disponible : 2" })).toBe(
+      "Stock insuffisant. Chemise (S) — disponible : 2",
+    );
+    expect(messageWithDetail({ message: "forbidden", details: "secret" })).not.toContain("secret");
   });
 
   it("maps auth error codes", () => {

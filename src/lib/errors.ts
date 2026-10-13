@@ -36,7 +36,34 @@ const DB_ERROR_MESSAGES: Record<string, string> = {
   import_too_large: "Import trop volumineux (2000 articles et 5000 variantes au maximum).",
   import_product_exists:
     "Un article de l'import existe déjà dans la boutique (créé entre-temps ?). Recommencez l'aperçu.",
+  insufficient_stock: "Stock insuffisant.",
+  stock_not_tracked: "Le stock de cet article n'est pas suivi.",
+  location_inactive: "Cet emplacement est inactif.",
+  opening_already_recorded:
+    "Un stock initial ou des mouvements existent déjà pour cet article à cet emplacement. Utilisez un ajustement.",
+  invalid_lines: "Lignes invalides : vérifiez les articles et les quantités (nombres entiers).",
+  duplicate_line: "Le même article apparaît deux fois.",
+  reason_required: "Indiquez un motif (3 caractères minimum).",
+  adjustment_not_found: "Ajustement introuvable.",
+  adjustment_not_pending: "Cet ajustement a déjà été traité.",
+  count_already_open: "Un inventaire est déjà en cours pour cet emplacement.",
+  count_not_found: "Inventaire introuvable.",
+  count_not_in_progress: "Cet inventaire n'est plus modifiable.",
+  count_not_submitted: "Cet inventaire n'est pas en attente de validation.",
+  count_empty: "Comptez au moins un article avant de soumettre.",
+  same_location: "Choisissez deux emplacements différents.",
+  invalid_parameter: "Requête invalide. Rechargez la page.",
 };
+
+/** Keys whose database `details` (e.g. the product name) is worth showing. */
+const KEYS_WITH_DETAIL = new Set(["insufficient_stock", "stock_not_tracked", "opening_already_recorded"]);
+
+/** Like messageForDbError, appending useful details (« T-shirt (S) — disponible : 2 »). */
+export function messageWithDetail(error: { message?: string; code?: string; details?: string | null } | null | undefined): string {
+  const base = messageForDbError(error);
+  const key = error?.message?.trim();
+  return key && KEYS_WITH_DETAIL.has(key) && error?.details ? `${base} ${error.details}` : base;
+}
 
 /** Unique / foreign-key constraint names (direct table writes) → messages. */
 const CONSTRAINT_MESSAGES: Record<string, string> = {

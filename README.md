@@ -3,9 +3,11 @@
 Retail management SaaS for independent Tunisian shops: products, stock,
 purchases, sales and margins on phone or computer. French-first, TND.
 
-**Status: Milestone 2 of 8** (Milestone 1: authentication, organizations,
-roles, tenant isolation; Milestone 2: catalog — products, variants,
-categories, suppliers, locations, search, CSV import). Not production-ready. See
+**Status: Milestone 3 of 8** (M1: authentication, organizations, roles,
+tenant isolation; M2: catalog — products, variants, categories, suppliers,
+locations, search, CSV import; M3: inventory — stock ledger, receipts, opening
+stock, adjustments with approval, stock counts, transfers, low stock,
+valuation). Not production-ready. See
 [docs/DEVELOPMENT_ROADMAP.md](docs/DEVELOPMENT_ROADMAP.md) for exactly what is
 implemented, partial and not started.
 
@@ -91,7 +93,8 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) and
   against a running Supabase Auth server (needs Docker or a Supabase project);
   database logic is tested on PGlite and on a real PostgreSQL 17 server with a
   Supabase shim (see ADR-004).
-- No stock, sales, purchases or reports yet (Milestones 3–6).
+- No sales, purchase orders or reports yet (Milestones 4–6). Stock receipts
+  exist without purchase orders.
 - Invitations do not send emails; the inviter gets a ready-to-send message.
 - No product images; search is not accent-insensitive; CSV import creates new
   products only (never updates existing ones).
