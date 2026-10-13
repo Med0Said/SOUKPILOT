@@ -10,9 +10,25 @@
 --     tests catch a missing REVOKE.
 -- It is NOT a full Supabase: no GoTrue, no PostgREST, no storage.
 
-create role anon nologin noinherit;
-create role authenticated nologin noinherit;
-create role service_role nologin noinherit bypassrls;
+-- Roles are cluster-wide on a real server (shared by every test database),
+-- so create them only once.
+do $$
+begin
+  if not exists (select 1 from pg_roles where rolname = 'anon') then
+    create role anon nologin noinherit;
+  end if;
+  if not exists (select 1 from pg_roles where rolname = 'authenticated') then
+    create role authenticated nologin noinherit;
+  end if;
+  if not exists (select 1 from pg_roles where rolname = 'service_role') then
+    create role service_role nologin noinherit bypassrls;
+  end if;
+end
+$$;
+
+-- Supabase installs extensions into the `extensions` schema.
+create schema if not exists extensions;
+grant usage on schema extensions to anon, authenticated, service_role;
 
 create schema auth;
 grant usage on schema auth to anon, authenticated, service_role;

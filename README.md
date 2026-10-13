@@ -3,8 +3,9 @@
 Retail management SaaS for independent Tunisian shops: products, stock,
 purchases, sales and margins on phone or computer. French-first, TND.
 
-**Status: Milestone 1 of 8** (foundation, authentication, organizations,
-roles, tenant isolation). Not production-ready. See
+**Status: Milestone 2 of 8** (Milestone 1: authentication, organizations,
+roles, tenant isolation; Milestone 2: catalog — products, variants,
+categories, suppliers, locations, search, CSV import). Not production-ready. See
 [docs/DEVELOPMENT_ROADMAP.md](docs/DEVELOPMENT_ROADMAP.md) for exactly what is
 implemented, partial and not started.
 
@@ -18,6 +19,7 @@ PostgreSQL 17, Row Level Security) · Zod · Vitest + PGlite.
 - Node.js ≥ 22.12 and npm
 - For the full local backend: Docker (required by `supabase start`)
 - The database test suite does **not** need Docker (embedded PostgreSQL)
+- Optional: PostgreSQL 17 binaries for `npm run test:db:pg` (real-server tests, incl. concurrency)
 
 ## Local setup
 
@@ -63,13 +65,14 @@ No secret/service-role key is used by the app.
 | `npm run lint` | ESLint |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run test:unit` | Unit tests (`src/**/*.test.ts`) |
-| `npm run test:db` | RLS / tenancy tests on the real migrations (PGlite, no Docker) |
+| `npm run test:db` | RLS / tenancy / catalog tests on the real migrations (PGlite, no Docker) |
+| `npm run test:db:pg` | Same suite on a real PostgreSQL server + concurrency tests (set `PG_BIN` or `TEST_DATABASE_URL`) |
 | `npm test` | All tests |
 | `npm run check` | lint + typecheck + all tests |
 | `npm run db:start` / `db:stop` / `db:reset` | Local Supabase stack (Docker) |
 | `npm run db:types` | Generate DB types from the local stack into `src/lib/supabase/database.generated.ts` (compare with the hand-written `database.types.ts`) |
 
-End-to-end tests (Playwright) are planned for Milestone 2.
+End-to-end tests (Playwright) are not set up yet: they need a running Supabase Auth to sign in (Docker or a Supabase project).
 
 ## Migrations
 
@@ -82,14 +85,16 @@ applied to a shared environment. See [docs/DATABASE_SCHEMA.md](docs/DATABASE_SCH
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) and
 [docs/BACKUP_AND_RESTORE.md](docs/BACKUP_AND_RESTORE.md).
 
-## Known limitations (Milestone 1)
+## Known limitations
 
-- Auth flows are implemented but have not yet been exercised end-to-end against
-  a running Supabase Auth server; database tests use an embedded Postgres with
-  a Supabase shim (see ADR-004).
-- No business modules yet (products, stock, sales, purchases, reports).
-- Invitations do not send emails; the inviter tells the invitee to sign in.
-- No app-level rate limiting on server actions; no nonce-based CSP yet.
+- Auth flows and the signed-in UI have not yet been exercised end-to-end
+  against a running Supabase Auth server (needs Docker or a Supabase project);
+  database logic is tested on PGlite and on a real PostgreSQL 17 server with a
+  Supabase shim (see ADR-004).
+- No stock, sales, purchases or reports yet (Milestones 3–6).
+- Invitations do not send emails; the inviter gets a ready-to-send message.
+- No product images; search is not accent-insensitive; CSV import creates new
+  products only (never updates existing ones).
 - French only; Arabic/RTL prepared but not supported. No offline mode.
 - No fiscal/legal compliance of any document is claimed.
 

@@ -3,6 +3,7 @@ import { hasPermission, requireOrgContext } from "@/lib/auth/organization";
 import { invitableRoles } from "@/lib/auth/permissions";
 import { createSupabaseServerClient, type SupabaseServerClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
+import { getPublicEnv } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { Alert, Card, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
@@ -80,7 +81,12 @@ export default async function MembersPage() {
           <Card>
             <h2 className="mb-1 font-semibold">{fr.members.inviteTitle}</h2>
             <p className="mb-4 text-sm text-muted">{fr.members.inviteHelp}</p>
-            <InviteForm organizationId={orgId} roles={roles} />
+            <InviteForm
+              organizationId={orgId}
+              organizationName={membership.organizationName}
+              siteUrl={getPublicEnv().NEXT_PUBLIC_SITE_URL}
+              roles={roles}
+            />
           </Card>
         ) : null}
 

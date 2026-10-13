@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from "react";
+import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 
 const CONTROL =
   "block w-full min-h-11 rounded-lg border border-border bg-surface px-3 text-base text-foreground " +
@@ -96,5 +96,63 @@ export function SelectField({
         ))}
       </select>
     </FieldShell>
+  );
+}
+
+export function TextAreaField({
+  id,
+  label,
+  hint,
+  error,
+  ...textarea
+}: Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "id"> & {
+  id: string;
+  label: string;
+  hint?: string;
+  error?: string;
+}) {
+  return (
+    <FieldShell id={id} label={label} hint={hint} error={error}>
+      <textarea
+        id={id}
+        name={textarea.name ?? id}
+        rows={3}
+        className={`${CONTROL} py-2`}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy(id, hint, error)}
+        {...textarea}
+      />
+    </FieldShell>
+  );
+}
+
+/** Checkbox submitting "on" when checked (absent = unchecked). */
+export function CheckboxField({
+  id,
+  label,
+  hint,
+  ...input
+}: Omit<InputHTMLAttributes<HTMLInputElement>, "id" | "type"> & { id: string; label: string; hint?: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <input
+        id={id}
+        name={input.name ?? id}
+        type="checkbox"
+        className="mt-1 size-5 shrink-0 accent-[var(--primary)]"
+        aria-describedby={hint ? `${id}-hint` : undefined}
+        {...input}
+      />
+      <div>
+        <label htmlFor={id} className="text-sm font-medium">
+          {label}
+        </label>
+        {hint ? (
+          <p id={`${id}-hint`} className="text-xs text-muted">
+            {hint}
+          </p>
+        ) : null}
+      </div>
+    </div>
   );
 }

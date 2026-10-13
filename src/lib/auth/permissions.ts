@@ -13,6 +13,11 @@ export const PERMISSIONS = {
   "invitations.create": ["owner", "manager"],
   "audit.view": ["owner", "manager"],
   "locations.manage": ["owner", "manager"],
+  "catalog.manage": ["owner", "manager"],
+  /** Purchase costs and margins: hidden from cashiers (RLS on product_variant_costs). */
+  "catalog.viewCosts": ["owner", "manager"],
+  "catalog.import": ["owner", "manager"],
+  "suppliers.manage": ["owner", "manager"],
 } as const satisfies Record<string, readonly OrgRole[]>;
 
 export type Permission = keyof typeof PERMISSIONS;

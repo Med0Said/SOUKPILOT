@@ -13,6 +13,16 @@ describe("error mapping", () => {
     expect(messageForDbError(null)).toBe(GENERIC_ERROR);
   });
 
+  it("maps unique-constraint violations from direct writes by constraint name", () => {
+    expect(
+      messageForDbError({
+        code: "23505",
+        message: 'duplicate key value violates unique constraint "product_variants_org_sku_idx"',
+      }),
+    ).toMatch(/SKU/);
+    expect(messageForDbError({ code: "23514", message: 'violates check constraint "x"' })).toMatch(/invalides/);
+  });
+
   it("maps auth error codes", () => {
     expect(messageForAuthError({ code: "invalid_credentials" })).toMatch(/incorrect/);
     expect(messageForAuthError({ code: "something_new" })).toBe(GENERIC_ERROR);

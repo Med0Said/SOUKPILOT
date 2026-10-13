@@ -7,10 +7,20 @@ import type { Database } from "./database.types";
  * Refreshes the Supabase session cookies on every matched request and returns
  * the verified user id (or null). This is an optimistic gate only: pages and
  * server actions re-check the session and RLS enforces data access.
+ *
+ * `extraRequestHeaders` (e.g. the CSP nonce) are forwarded to the render.
  */
-export async function updateSession(request: NextRequest) {
+export async function updateSession(request: NextRequest, extraRequestHeaders: Record<string, string> = {}) {
   const env = getPublicEnv();
-  let response = NextResponse.next({ request });
+
+  const forward = () => {
+    // request.headers reflects cookies refreshed below via request.cookies.set.
+    const headers = new Headers(request.headers);
+    for (const [key, value] of Object.entries(extraRequestHeaders)) headers.set(key, value);
+    return NextResponse.next({ request: { headers } });
+  };
+
+  let response = forward();
 
   const supabase = createServerClient<Database>(
     env.NEXT_PUBLIC_SUPABASE_URL,
@@ -24,7 +34,7 @@ export async function updateSession(request: NextRequest) {
           for (const { name, value } of cookiesToSet) {
             request.cookies.set(name, value);
           }
-          response = NextResponse.next({ request });
+          response = forward();
           for (const { name, value, options } of cookiesToSet) {
             response.cookies.set(name, value, options);
           }

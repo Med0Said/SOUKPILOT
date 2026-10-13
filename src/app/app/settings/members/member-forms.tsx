@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { SelectField, TextField } from "@/components/ui/field";
 import { ActionMessage } from "@/components/ui/layout";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -69,11 +69,24 @@ export function MemberActions({
   );
 }
 
-export function InviteForm({ organizationId, roles }: { organizationId: string; roles: OrgRole[] }) {
+export function InviteForm({
+  organizationId,
+  organizationName,
+  siteUrl,
+  roles,
+}: {
+  organizationId: string;
+  organizationName: string;
+  siteUrl: string;
+  roles: OrgRole[];
+}) {
   const [state, action] = useActionState(createInvitationAction, initialActionState);
   return (
     <form action={action} className="space-y-4" noValidate>
       <ActionMessage state={state} />
+      {state.status === "success" && state.values?.email ? (
+        <ShareMessage text={fr.members.shareMessage(organizationName, siteUrl, state.values.email)} />
+      ) : null}
       <input type="hidden" name="organizationId" value={organizationId} />
       <div className="grid gap-4 sm:grid-cols-[1fr_12rem]">
         <TextField
@@ -109,5 +122,30 @@ export function RevokeInvitationButton({ invitationId }: { invitationId: string 
       <input type="hidden" name="invitationId" value={invitationId} />
       <SubmitButton variant="secondary">{fr.members.revoke}</SubmitButton>
     </form>
+  );
+}
+
+/** Invitations send no email: give the inviter a ready-to-send message. */
+function ShareMessage({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="space-y-2 rounded-lg bg-background p-3">
+      <p className="text-sm font-medium">{fr.members.shareTitle}</p>
+      <p className="select-all whitespace-pre-line text-sm">{text}</p>
+      <button
+        type="button"
+        className="min-h-11 rounded-lg border border-border bg-surface px-3 text-sm"
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(text);
+            setCopied(true);
+          } catch {
+            setCopied(false);
+          }
+        }}
+      >
+        {copied ? fr.members.copied : fr.members.copy}
+      </button>
+    </div>
   );
 }

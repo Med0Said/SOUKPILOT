@@ -1,7 +1,7 @@
 /**
  * Database types for the Supabase client.
  *
- * Hand-written for Milestone 1 to mirror supabase/migrations (no local Supabase
+ * Hand-written to mirror supabase/migrations (no local Supabase
  * stack was available to generate them). Once `npx supabase start` works,
  * regenerate with `npm run db:types` and diff against this file.
  */
@@ -113,6 +113,141 @@ export type Database = {
         Update: never;
         Relationships: [];
       };
+      categories: {
+        Row: { id: string; organization_id: string; name: string; created_at: string; updated_at: string };
+        Insert: { organization_id: string; name: string };
+        Update: { name?: string };
+        Relationships: [];
+      };
+      suppliers: {
+        Row: {
+          id: string;
+          organization_id: string;
+          name: string;
+          phone: string | null;
+          email: string | null;
+          notes: string | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          organization_id: string;
+          name: string;
+          phone?: string | null;
+          email?: string | null;
+          notes?: string | null;
+          is_active?: boolean;
+        };
+        Update: { name?: string; phone?: string | null; email?: string | null; notes?: string | null; is_active?: boolean };
+        Relationships: [];
+      };
+      products: {
+        Row: {
+          id: string;
+          organization_id: string;
+          name: string;
+          description: string | null;
+          category_id: string | null;
+          supplier_id: string | null;
+          option_names: string[];
+          track_stock: boolean;
+          is_active: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: {
+          name?: string;
+          description?: string | null;
+          category_id?: string | null;
+          supplier_id?: string | null;
+          track_stock?: boolean;
+          is_active?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "products_organization_id_category_id_fkey";
+            columns: ["organization_id", "category_id"];
+            isOneToOne: false;
+            referencedRelation: "categories";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "products_organization_id_supplier_id_fkey";
+            columns: ["organization_id", "supplier_id"];
+            isOneToOne: false;
+            referencedRelation: "suppliers";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      product_variants: {
+        Row: {
+          id: string;
+          organization_id: string;
+          product_id: string;
+          sku: string | null;
+          barcode: string | null;
+          option_values: string[];
+          price_millimes: number;
+          low_stock_threshold: number | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          organization_id: string;
+          product_id: string;
+          sku?: string | null;
+          barcode?: string | null;
+          option_values: string[];
+          price_millimes: number;
+          low_stock_threshold?: number | null;
+          is_active?: boolean;
+        };
+        Update: {
+          sku?: string | null;
+          barcode?: string | null;
+          option_values?: string[];
+          price_millimes?: number;
+          low_stock_threshold?: number | null;
+          is_active?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "product_variants_organization_id_product_id_fkey";
+            columns: ["organization_id", "product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      product_variant_costs: {
+        Row: { variant_id: string; organization_id: string; cost_millimes: number | null; updated_at: string };
+        Insert: never;
+        Update: { cost_millimes?: number | null };
+        Relationships: [];
+      };
+      catalog_import_batches: {
+        Row: {
+          id: string;
+          organization_id: string;
+          status: "pending" | "committed";
+          file_name: string;
+          products: Json;
+          summary: Json;
+          created_by: string | null;
+          created_at: string;
+          committed_by: string | null;
+          committed_at: string | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       audit_logs: {
         Row: {
           id: string;
@@ -175,6 +310,60 @@ export type Database = {
       respond_to_invitation: {
         Args: { p_invitation_id: string; p_accept: boolean };
         Returns: string;
+      };
+      create_product: {
+        Args: { p_organization_id: string; p_product: Json };
+        Returns: string;
+      };
+      save_variant: {
+        Args: { p_organization_id: string; p_product_id: string; p_variant_id: string | null; p_variant: Json };
+        Returns: string;
+      };
+      search_products: {
+        Args: {
+          p_organization_id: string;
+          p_query?: string;
+          p_category_id?: string | null;
+          p_include_inactive?: boolean;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: {
+          product_id: string;
+          name: string;
+          category_name: string | null;
+          is_active: boolean;
+          track_stock: boolean;
+          variant_count: number;
+          min_price_millimes: number | null;
+          max_price_millimes: number | null;
+          total_count: number;
+        }[];
+      };
+      find_variant_by_code: {
+        Args: { p_organization_id: string; p_code: string };
+        Returns: {
+          variant_id: string;
+          product_id: string;
+          product_name: string;
+          option_values: string[];
+          sku: string | null;
+          barcode: string | null;
+          price_millimes: number;
+          is_active: boolean;
+        }[];
+      };
+      find_catalog_conflicts: {
+        Args: { p_organization_id: string; p_names: string[]; p_skus: string[]; p_barcodes: string[] };
+        Returns: { kind: "name" | "sku" | "barcode"; value: string }[];
+      };
+      stage_catalog_import: {
+        Args: { p_organization_id: string; p_file_name: string; p_products: Json; p_summary?: Json };
+        Returns: string;
+      };
+      commit_catalog_import: {
+        Args: { p_batch_id: string };
+        Returns: Json;
       };
     };
     Enums: {

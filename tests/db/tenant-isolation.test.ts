@@ -8,7 +8,7 @@
  *   outsider: signed-in user with no membership
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import type { PGlite } from "@electric-sql/pglite";
+import type { TestDb } from "./harness";
 import {
   addMember,
   asAnon,
@@ -20,7 +20,7 @@ import {
   type TestUser,
 } from "./harness";
 
-let db: PGlite;
+let db: TestDb;
 let ownerA: TestUser;
 let managerA: TestUser;
 let cashierA: TestUser;

@@ -132,7 +132,7 @@ export async function createInvitationAction(_prev: ActionState, formData: FormD
   }
 
   revalidatePath("/app/settings/members");
-  return { status: "success", message: fr.members.invited };
+  return { status: "success", message: fr.members.invited, values: { email: parsed.data.email } };
 }
 
 export async function revokeInvitationAction(_prev: ActionState, formData: FormData): Promise<ActionState> {

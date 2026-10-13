@@ -1,13 +1,20 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { requireOrgContext } from "@/lib/auth/organization";
+import { can } from "@/lib/auth/permissions";
 import { switchOrganizationAction } from "@/app/_actions/organizations";
 import { signOutAction } from "@/app/(auth)/actions";
 import { fr } from "@/i18n/fr";
-import { NavLinks } from "./nav-links";
+import { NavLinks, type NavItem } from "./nav-links";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const { membership, memberships } = await requireOrgContext();
+  const navItems: NavItem[] = [
+    { href: "/app", label: fr.nav.dashboard, exact: true },
+    { href: "/app/catalog", label: fr.nav.catalog },
+    ...(can(membership.role, "suppliers.manage") ? [{ href: "/app/suppliers", label: fr.nav.suppliers }] : []),
+    { href: "/app/settings", label: fr.nav.settings, also: ["/app/profile"] },
+  ];
 
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[15rem_1fr]">
@@ -23,7 +30,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           options={memberships.map((m) => ({ id: m.organizationId, name: m.organizationName }))}
         />
         <nav aria-label={fr.nav.mainNavigation} className="flex-1">
-          <NavLinks orientation="vertical" />
+          <NavLinks items={navItems} orientation="vertical" />
         </nav>
         <form action={signOutAction}>
           <button type="submit" className="min-h-11 w-full rounded-lg px-3 text-start text-sm text-muted hover:bg-background">
@@ -53,7 +60,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           aria-label={fr.nav.mainNavigation}
           className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
         >
-          <NavLinks orientation="horizontal" />
+          <NavLinks items={navItems} orientation="horizontal" />
         </nav>
       </div>
     </div>

@@ -2,27 +2,38 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { fr } from "@/i18n/fr";
 
-/** Only implemented modules are listed; future modules are not shown as working. */
-const LINKS = [
-  { href: "/app", label: fr.nav.dashboard, exact: true },
-  { href: "/app/settings/organization", label: fr.nav.organization },
-  { href: "/app/settings/members", label: fr.nav.members },
-  { href: "/app/profile", label: fr.nav.profile },
-] as const;
+export type NavItem = {
+  href: string;
+  label: string;
+  /** Extra path prefixes that mark this item active (e.g. /app/profile under Paramètres). */
+  also?: string[];
+  exact?: boolean;
+};
 
-export function NavLinks({ orientation }: { orientation: "vertical" | "horizontal" }) {
+// Static class names (no inline style: the CSP forbids style attributes).
+const GRID_COLS: Record<number, string> = { 2: "grid-cols-2", 3: "grid-cols-3", 4: "grid-cols-4", 5: "grid-cols-5" };
+
+/**
+ * Only implemented modules are listed (computed per role on the server);
+ * future modules are not shown as if they worked.
+ */
+export function NavLinks({ items, orientation }: { items: NavItem[]; orientation: "vertical" | "horizontal" }) {
   const pathname = usePathname();
   const vertical = orientation === "vertical";
+  const isActive = (item: NavItem) =>
+    item.exact
+      ? pathname === item.href
+      : [item.href, ...(item.also ?? [])].some((p) => pathname === p || pathname.startsWith(`${p}/`));
+
   return (
-    <ul className={vertical ? "space-y-1" : "grid grid-cols-4"}>
-      {LINKS.map((link) => {
-        const active = "exact" in link ? pathname === link.href : pathname.startsWith(link.href);
+    <ul className={vertical ? "space-y-1" : `grid ${GRID_COLS[items.length] ?? "grid-cols-5"}`}>
+      {items.map((item) => {
+        const active = isActive(item);
         return (
-          <li key={link.href}>
+          <li key={item.href}>
             <Link
-              href={link.href}
+              href={item.href}
               aria-current={active ? "page" : undefined}
               className={
                 vertical
@@ -34,7 +45,7 @@ export function NavLinks({ orientation }: { orientation: "vertical" | "horizonta
                     }`
               }
             >
-              {link.label}
+              {item.label}
             </Link>
           </li>
         );

@@ -60,6 +60,10 @@ Last updated 2026-10-13 (Milestone 1).
 | See members' emails | ✓ | ✓ | own only |
 | Read invitations & audit log | ✓ | ✓ | – |
 | Leave organization | ✓ (if not last owner) | ✓ | ✓ |
+| Browse catalog (products, variants, prices, categories) | ✓ | ✓ | ✓ |
+| Create/edit products, variants, categories; import CSV | ✓ | ✓ | – |
+| See purchase costs | ✓ | ✓ | – |
+| Suppliers (read and write) | ✓ | ✓ | – |
 
 Invariants: nobody changes their own role; owners cannot be invited (only
 promoted by an owner); an organization always keeps ≥ 1 owner (trigger).
@@ -100,13 +104,26 @@ Never put secrets or card data in `details`.
 
 ## 6. Web hardening
 
-Headers (next.config.ts): `X-Frame-Options: DENY`, CSP `frame-ancestors 'none';
-base-uri 'self'; form-action 'self'; object-src 'none'`, `nosniff`,
+Static headers (next.config.ts): `X-Frame-Options: DENY`, `nosniff`,
 `Referrer-Policy`, `Permissions-Policy`, HSTS in production, no `X-Powered-By`.
-Post-login redirects are sanitized (`safeNextPath`, unit-tested against
-open-redirect payloads). Server Actions are POST-only with Next.js origin checks.
 
-**Planned**: nonce-based `script-src` CSP (needs per-request nonce plumbing).
+**Content-Security-Policy** (src/lib/security/csp.ts, set per request in
+src/proxy.ts): `script-src 'self' 'nonce-…' 'strict-dynamic'` (no
+`unsafe-inline`; `unsafe-eval` in development only), `style-src 'self'
+'nonce-…'`, `connect-src 'self' <supabase url>`, `object-src 'none'`,
+`base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`,
+`upgrade-insecure-requests` on HTTPS sites. Every page renders per request
+(`connection()` in the root layout) so Next.js can attach the nonce. Rule for
+developers: **no inline `style` attributes** (blocked by the policy) — use
+classes. Verified on a production build in a browser: hydration works, no
+console violations.
+
+Post-login redirects are sanitized (`safeNextPath`, unit-tested against
+open-redirect payloads). Server Actions are POST-only with Next.js origin
+checks; their body limit is 3 MB (CSV import).
+
+CSV: the downloadable template is generated with formula-injection escaping
+(`=`, `+`, `-`, `@` prefixed with `'`); imported text is stored as plain text.
 
 ## 7. Rate limiting
 
@@ -114,8 +131,11 @@ open-redirect payloads). Server Actions are POST-only with Next.js origin checks
   dashboard settings in production).
 - Organization creation: max 5 organizations created per account (DB-enforced,
   serialized with an advisory lock).
-- **Not yet implemented**: app-level rate limiting of server actions. Planned
-  before pilot for invitation creation and, later, CSV import.
+- Invitations: 30 per organization per hour; CSV import staging: 30 per
+  organization per hour. Enforced **in the database** (`private.enforce_rate_limit`),
+  so they hold for direct Data API calls and on serverless hosts.
+- Not rate-limited yet: ordinary form saves (products, categories…) — they are
+  authenticated, tenant-scoped and cheap; revisit if abuse appears.
 
 ## 8. Logging & privacy
 
@@ -127,8 +147,16 @@ user (generic French message instead).
 ## 9. How to verify tenant isolation locally
 
 ```bash
-npm run test:db
+npm run test:db      # embedded PostgreSQL (PGlite), no services
+npm run test:db:pg   # same suite on a real PostgreSQL server (adds concurrency tests)
 ```
+
+`test:db:pg` starts a throwaway local cluster with the PostgreSQL binaries on
+`PATH` (or `PG_BIN`, e.g. `C:\Program Files\PostgreSQL\17\bin`), or uses
+`TEST_DATABASE_URL` if set. `tests/db/catalog.test.ts` covers the catalog:
+cashiers never read costs, other tenants see nothing, no cross-tenant
+category/product references, audited price changes, search isolation, import
+authorization and idempotency (two simultaneous commits → exactly one import).
 
 `tests/db/tenant-isolation.test.ts` builds two organizations (owner, manager,
 cashier in A; owner in B; plus an outsider) and checks, through the

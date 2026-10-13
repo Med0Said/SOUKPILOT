@@ -59,30 +59,67 @@ Private helpers (`private` schema, not exposed): `is_org_member`,
 `has_org_role`, `shares_org_with`, `write_audit`, `require_user`,
 `require_confirmed_email`, trigger functions.
 
+## 2a. Rate limiting (implemented, migration `20261014090000_rate_limits.sql`)
+
+`private.rate_limit_counters (bucket, window_start, hits)` + `private.enforce_rate_limit(bucket, limit, window)`:
+fixed windows; an over-limit call raises `rate_limited` and, because the
+exception rolls back, does not consume the window. Applied to invitations
+(trigger, 30/h/org) and import staging (30/h/org).
+
+## 2b. Catalog (implemented, Milestone 2)
+
+```
+categories ──┐                     suppliers ──┐
+             │0..1                             │0..1
+             └──────────── products ───────────┘
+                              │1
+                              │1..200
+                        product_variants ──1:1── product_variant_costs (owner/manager only)
+catalog_import_batches (staged CSV payloads, committed once)
+```
+
+| Table | Key constraints |
+| --- | --- |
+| `categories` | name 1–80; unique `(organization_id, lower(name))`; deletable (products get `category_id = NULL` via `ON DELETE SET NULL (category_id)`) |
+| `suppliers` | name 1–120, unique per org (case-insensitive); optional phone/email/notes; no delete (deactivate) |
+| `products` | name 1–200; `option_names text[]` ≤ 3 distinct labels, **immutable** (not in the UPDATE grant); composite FKs `(organization_id, category_id)` / `(organization_id, supplier_id)`; no INSERT/DELETE grant (creation via `create_product`) |
+| `product_variants` | `option_values` must have one value per product option (trigger); unique `(product_id, options_key(option_values))` (case-insensitive); SKU unique `(organization_id, upper(sku))`; barcode unique `(organization_id, barcode)`; `price_millimes` 0–10¹²; `low_stock_threshold ≥ 0`; composite FK to products; no DELETE |
+| `product_variant_costs` | 1:1 with variants (row created by trigger, `cost_millimes NULL` = unknown); readable/updatable by owner/manager only |
+| `catalog_import_batches` | `status pending → committed` (once); payload ≤ 2000 products / 5000 variants / 5 MB; readable by owner/manager |
+
+Audit: generic trigger `private.audit_row_change(entity, id_column)` logs
+`<entity>.created|updated|deleted`; updates store only changed columns as
+`[old, new]` (e.g. price history `{"price_millimes": [18500, 19900]}`).
+
+| Function | Kind | Transaction / authorization |
+| --- | --- | --- |
+| `create_product(org, payload)` | definer | product + variants + costs, all-or-nothing; owner/manager |
+| `save_variant(org, product, variant_id?, payload)` | definer | insert or update a variant **and** its cost atomically; owner/manager |
+| `search_products(org, q, category, include_inactive, limit, offset)` | invoker (RLS) | name ILIKE (trigram index), SKU ILIKE, exact barcode; `%`/`_` escaped |
+| `find_variant_by_code(org, code)` | invoker (RLS) | exact barcode or SKU (scanner) |
+| `find_catalog_conflicts(org, names, skus, barcodes)` | invoker (RLS) | import preview |
+| `stage_catalog_import(org, file, products, summary)` | definer | rate-limited, size-checked; owner/manager |
+| `commit_catalog_import(batch)` | definer | `SELECT … FOR UPDATE` on the batch → find-or-create categories/suppliers → refuse existing product names → insert products; any error rolls back everything; second commit → `import_already_committed` |
+
+Errors from constraints are translated to stable keys (`duplicate_sku`,
+`duplicate_barcode`, `duplicate_variant_options`, `variant_options_mismatch`,
+`invalid_reference`, `invalid_product`, `import_*`); for import commits the
+offending product name is returned in `details`.
+
 ## 3. Tenant isolation strategy
 
 1. RLS on every table; policies reference only `auth.uid()` through
    membership helpers — a client-supplied `organization_id` is never sufficient.
 2. Table and column `GRANT`s restrict verbs even where a policy would allow a row.
 3. Membership is only changed through audited definer functions.
-4. (From M2) composite FKs `(organization_id, parent_id)` so a row can never
+4. Composite FKs `(organization_id, parent_id)` (in use since M2) so a row can never
    point at another tenant's product/location/customer even via a definer function bug.
 5. Automated tests (tests/db) for every table and role; catalog tests fail if
    a new table forgets RLS or grants something to `anon`.
 
 ## 4. Proposed schema for Milestones 2–7
 
-### Catalog (M2)
-- `categories (id, organization_id, name, parent_id?)`
-- `products (id, organization_id, name, category_id?, description, is_active, track_stock bool, default_supplier_id?, image_path?)`
-- `product_attributes (id, organization_id, name)` — e.g. Taille, Couleur, Teinte
-- `product_variants (id, organization_id, product_id, sku, barcode, attribute_values jsonb, cost_millimes bigint ≥ 0, price_millimes bigint ≥ 0, is_active)`
-  - unique `(organization_id, sku)`, unique `(organization_id, barcode) where barcode is not null`
-  - a product without options still has exactly one variant (stable stock identity)
-- Indexes: trigram on product name (`pg_trgm`), btree on sku/barcode.
-- CSV import: stage rows in a `import_batches`/`import_rows` pair (preview,
-  per-row errors), commit in one function; conflicting identifiers are reported,
-  never merged silently.
+Catalog (M2) is implemented — see §2b.
 
 ### Inventory (M3)
 - `stock_movements` — **append-only ledger** (no UPDATE/DELETE grants):

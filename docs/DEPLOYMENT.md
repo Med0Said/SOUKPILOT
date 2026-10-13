@@ -9,12 +9,19 @@ Last updated 2026-10-13. Nothing has been deployed yet.
   Supabase region.
 - **Database/Auth**: a Supabase project in an EU region.
 
-> Free and low-cost tiers change often. **Before choosing a plan, verify on the
-> providers' current pricing/terms pages**: whether commercial use is allowed on
-> the free tier, project pausing after inactivity, database size and egress
-> limits, automatic backup availability and retention, point-in-time recovery,
-> email sending limits, and data-location options. A paying-customer pilot
-> should not depend on a tier that pauses projects or has no backups.
+### Plan terms (verified 2026-10-13 — re-check before deploying)
+
+| Provider / plan | Relevant terms (from the providers' own pages) | Fit |
+| --- | --- | --- |
+| Supabase **Free** | $0; 500 MB database per project; 5 GB egress; 50,000 MAU; **projects paused after 1 week of inactivity**; **no backups**; 2 active projects | Development / demos only |
+| Supabase **Pro** | from $25/month; 8 GB disk per project; 250 GB egress; 100,000 MAU; never paused; **daily backups kept 7 days**; PITR is a paid add-on ($100/month per 7 days) | Minimum for paying pilots |
+| Vercel **Hobby** | Free; **"restricts users to non-commercial, personal use only"** (fair-use guidelines) | Not allowed for a paid SaaS |
+| Vercel **Pro** | $20 per developer seat/month + usage | Suitable; or any Node 22 host |
+
+Sources: https://supabase.com/pricing, https://vercel.com/docs/plans/hobby.
+Consequences: a paid pilot needs Supabase Pro (backups, no pausing) and a
+commercial-use app host; even with Pro, keep the independent logical backups
+in docs/BACKUP_AND_RESTORE.md (7-day retention is short).
 
 ## Environment variables
 

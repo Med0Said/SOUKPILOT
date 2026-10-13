@@ -16,6 +16,13 @@ describe("UI permission matrix (mirrors database rules)", () => {
     expect(can("manager", "audit.view")).toBe(true);
   });
 
+  it("cashiers can browse the catalog but not manage it or see costs", () => {
+    expect(can("cashier", "catalog.manage")).toBe(false);
+    expect(can("cashier", "catalog.viewCosts")).toBe(false);
+    expect(can("cashier", "suppliers.manage")).toBe(false);
+    expect(can("manager", "catalog.import")).toBe(true);
+  });
+
   it("invitable roles never include owner", () => {
     expect(invitableRoles("owner")).toEqual(["manager", "cashier"]);
     expect(invitableRoles("manager")).toEqual(["cashier"]);

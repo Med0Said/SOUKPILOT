@@ -37,3 +37,22 @@ export function ActionMessage({ state }: { state: ActionState }) {
   if (!state.message || state.status === "idle") return null;
   return <Alert tone={state.status === "error" ? "error" : "success"}>{state.message}</Alert>;
 }
+
+export function EmptyState({ title, children }: { title: string; children?: ReactNode }) {
+  return (
+    <div className="rounded-xl border border-dashed border-border p-8 text-center">
+      <p className="font-medium">{title}</p>
+      {children ? <div className="mt-2 text-sm text-muted">{children}</div> : null}
+    </div>
+  );
+}
+
+export function Badge({ tone = "neutral", children }: { tone?: "neutral" | "success" | "warning" | "danger"; children: ReactNode }) {
+  const styles = {
+    neutral: "bg-background text-muted border-border",
+    success: "bg-success-soft text-success border-success/30",
+    warning: "bg-[#fffbeb] text-[#92400e] border-[#f59e0b]/40 dark:bg-[#2a2210] dark:text-[#fcd34d]",
+    danger: "bg-danger-soft text-danger border-danger/30",
+  }[tone];
+  return <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${styles}`}>{children}</span>;
+}

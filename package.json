@@ -16,7 +16,8 @@
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
-    "db:types": "supabase gen types typescript --local > src/lib/supabase/database.generated.ts"
+    "db:types": "supabase gen types typescript --local > src/lib/supabase/database.generated.ts",
+    "test:db:pg": "node scripts/test-db-pg.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -31,10 +32,12 @@
     "@electric-sql/pglite": "^0.5.9",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^22.20.5",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
+    "pg": "^8.23.1",
     "supabase": "^2.120.0",
     "tailwindcss": "^4",
     "typescript": "^5",

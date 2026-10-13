@@ -54,6 +54,8 @@ src/
   components/ui/              small accessible primitives (Button, fields, Card, Alert)
   i18n/                       French dictionary + locale/direction config
   lib/
+    domain/                   pure business logic: money (millimes), CSV, catalog rules, import analyzer
+    security/                 CSP builder
     auth/                     session (DAL), active organization, permissions, routes
     supabase/                 server / proxy clients, database types
     validation/               Zod schemas
@@ -91,16 +93,19 @@ and server-side caching adds a risk of serving one tenant's data to another.
 Request-time rendering is simpler to reason about.
 *Revisit*: for public marketing pages, or if dashboard latency becomes a problem.
 
-### ADR-004 Database tests run on PGlite with a Supabase shim
-*Decision*: `tests/db/*` boot an embedded PostgreSQL 17 (PGlite), create the
-Supabase API roles + `auth.uid()` (tests/db/supabase-shim.sql), apply every
-migration, and run queries as `authenticated`/`anon` with JWT claims set —
-exactly what PostgREST does.
-*Why*: Docker (needed for `supabase start`) is not available on every developer
-machine; these tests run in ~2 s with no services.
+### ADR-004 Database tests on PGlite and on a real PostgreSQL server, with a Supabase shim
+*Decision*: `tests/db/*` create the Supabase API roles + `auth.uid()`
+(tests/db/supabase-shim.sql), apply every migration, and run queries as
+`authenticated`/`anon` with JWT claims set — exactly what PostgREST does.
+Two interchangeable backends (tests/db/harness.ts):
+- `npm run test:db` — embedded PostgreSQL 17 (PGlite), ~3 s, no services;
+- `npm run test:db:pg` — a real PostgreSQL server (throwaway local cluster or
+  `TEST_DATABASE_URL`), one fresh database per test file; required for
+  **concurrency tests** (several connections), which are skipped on PGlite.
+*Why*: Docker (needed for `supabase start`) is not available on every developer machine.
 *Limits*: does not exercise GoTrue, PostgREST HTTP or hosted-Supabase-specific
-grants. Before the pilot, the same suite must also be run against a real
-Supabase stack (local `supabase start` or a staging project) — tracked in the roadmap.
+grants. Before the pilot, run the suite once against a real Supabase stack
+(local `supabase start` or a staging project) — tracked in the roadmap.
 
 ### ADR-005 Money as integer millimes; quantities as integers (planned, M2–M4)
 *Decision*: all amounts `bigint` in millimes (1 TND = 1000 millimes). No
@@ -124,6 +129,31 @@ Native `<input>`, `<select>`, `<button>` with labels, `aria-invalid`,
 `aria-describedby`, 44 px touch targets. When dialogs/menus/comboboxes are
 needed (M2+), adopt Radix-based primitives (shadcn/ui) rather than hand-rolling
 focus management.
+
+### ADR-010 Purchase cost in its own table
+*Decision*: `product_variant_costs` (1:1 with variants) instead of a cost column.
+*Why*: RLS is row-level; the only robust way to hide costs (and therefore
+margins) from cashiers while letting them read prices is a separate table with
+an owner/manager policy. Odoo makes the same distinction (cost visible to
+internal users only). Sale finalization (M4, definer function) will snapshot
+the cost per sale line.
+
+### ADR-011 Nonce-based CSP with request-time rendering
+*Decision*: the proxy generates a nonce per request and sets a strict CSP;
+the root layout calls `connection()` so every page renders per request and
+Next.js attaches the nonce. Inline `style` attributes are not allowed.
+*Trade-off*: no static prerendering, even for public pages — acceptable for an
+app whose pages are almost all per-tenant anyway (consistent with ADR-003).
+
+### ADR-012 CSV import = pure analyzer + staged batch + idempotent SQL commit
+*Decision*: `src/lib/domain/catalog-import.ts` parses/validates/groups rows
+without I/O (unit-tested); the server asks the DB for existing identifiers,
+stages the validated payload (`stage_catalog_import`), and the user confirms;
+`commit_catalog_import` locks the batch, re-applies every constraint and
+commits all-or-nothing, once.
+*Why*: preview without side effects, clear row-level errors, protection
+against double submission and races, and the database stays the authority
+even if someone calls the staging API with a crafted payload.
 
 ### ADR-009 French-first, RTL-ready
 Strings live in `src/i18n/fr.ts`; layout uses logical properties

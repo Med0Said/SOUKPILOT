@@ -18,7 +18,7 @@ Last updated 2026-10-13.
 
 | Milestone | Odoo Community modules to review | Version reviewed |
 | --- | --- | --- |
-| M2 Catalog | `product` (templates, variants, attributes) | _to record_ |
+| M2 Catalog | `product` (templates, variants, attributes) | `18.0` @ `895677f806dceac1fb51f494701bde69cfa35c38`, `addons/product/models/product_product.py` (reviewed 2026-10-13, business rules only) |
 | M3 Inventory | `stock` (moves, quants, inventory adjustments, locations) | _to record_ |
 | M4 Sales | `sale`, `point_of_sale` (sessions, orders, payments, refunds) | _to record_ |
 | M5 Purchasing | `purchase`, `stock` receipts | _to record_ |
@@ -35,6 +35,17 @@ Last updated 2026-10-13.
 | POS sessions | Cash control per session | Lightweight `cash_sessions` (M4/M7) — expected vs. counted cash, not an accounting ledger |
 | `account.payment` / partial reconciliation | Multiple payments per order; outstanding balance | `sale_payments` in integer millimes; paid/outstanding computed consistently in SQL |
 | Purchase order → receipt | Ordering does not move stock; receiving does | Same rule; receipts are idempotent documents |
+
+## M2 review notes — Odoo 18.0 `product` (behaviour, not code)
+
+| Odoo behaviour observed | SoukPilot decision |
+| --- | --- |
+| Barcode unique per company (checked by an ORM constraint, no DB unique index); shared with packaging barcodes | Barcode unique per organization **enforced by a partial unique index** (no packaging concept) |
+| Internal reference (`default_code`) not unique — duplicates only trigger a warning | SKU **unique** per organization (case-insensitive): small shops rely on it to find items, and CSV import uses it to detect duplicates |
+| Variant identity = set of attribute values; one *active* variant per combination | One variant per combination per product (case-insensitive), active or not; variants are never deleted, only deactivated, so stock history keeps a stable id |
+| Variant price = template price + sum of attribute "price extras" | Each variant stores its **own price** in millimes (simpler for shops; the form can apply one price to all generated variants) |
+| Cost is company-dependent and only visible to internal users | Cost in a separate table readable by owner/manager only (cashiers never see costs/margins) |
+| Archiving the last variant archives the template | Product and variant `is_active` are independent flags in the MVP |
 
 ## Deliberate simplifications vs. Odoo
 

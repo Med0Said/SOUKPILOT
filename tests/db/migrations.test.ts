@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import type { PGlite } from "@electric-sql/pglite";
+import type { TestDb } from "./harness";
 import { createTestDb } from "./harness";
 
-let db: PGlite;
+let db: TestDb;
 
 beforeAll(async () => {
   db = await createTestDb();
