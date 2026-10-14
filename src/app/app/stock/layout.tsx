@@ -15,6 +15,7 @@ export default async function StockLayout({ children }: { children: ReactNode })
     { href: "/app/stock/adjustments", label: t.adjustments },
     { href: "/app/stock/counts", label: t.counts },
     ...(can(role, "stock.transfer") ? [{ href: "/app/stock/transfers", label: t.transfers }] : []),
+    ...(can(role, "purchasing.manage") ? [{ href: "/app/purchases", label: fr.nav.purchases }] : []),
   ];
   return (
     <>

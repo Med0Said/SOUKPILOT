@@ -66,6 +66,15 @@ const DB_ERROR_MESSAGES: Record<string, string> = {
   return_exceeds_sold: "Quantité retournée supérieure à la quantité vendue restante.",
   refund_exceeds_balance: "Le remboursement dépasse le montant dû au client.",
   sale_immutable: "Une vente validée ne peut pas être modifiée : utilisez un retour.",
+  unit_cost_required: "Indiquez un prix d'achat pour chaque ligne.",
+  supplier_inactive: "Ce fournisseur est inactif.",
+  purchase_amount_too_large: "Montant de commande trop élevé.",
+  purchase_order_not_found: "Bon de commande introuvable.",
+  purchase_order_locked: "Ce bon de commande est déjà passé : il ne peut plus être modifié.",
+  purchase_order_not_cancellable: "Impossible d'annuler : des marchandises ont déjà été reçues. Clôturez la commande.",
+  purchase_order_not_open: "Ce bon de commande n'attend plus de réception.",
+  receipt_exceeds_ordered: "Quantité reçue supérieure au reste à recevoir.",
+  invalid_date: "Date invalide.",
 };
 
 /** Keys whose database `details` (e.g. the product name) is worth showing. */
@@ -75,6 +84,7 @@ const KEYS_WITH_DETAIL = new Set([
   "opening_already_recorded",
   "variant_inactive",
   "return_exceeds_sold",
+  "receipt_exceeds_ordered",
 ]);
 
 /** Like messageForDbError, appending useful details (« T-shirt (S) — disponible : 2 »). */

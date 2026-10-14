@@ -40,6 +40,11 @@ describe("UI permission matrix (mirrors database rules)", () => {
     expect(can("manager", "sales.return")).toBe(true);
   });
 
+  it("purchasing is owner/manager only (it exposes costs)", () => {
+    expect(can("cashier", "purchasing.manage")).toBe(false);
+    expect(can("manager", "purchasing.manage")).toBe(true);
+  });
+
   it("invitable roles never include owner", () => {
     expect(invitableRoles("owner")).toEqual(["manager", "cashier"]);
     expect(invitableRoles("manager")).toEqual(["cashier"]);

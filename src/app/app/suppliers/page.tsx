@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { hasPermission, requireOrgContext } from "@/lib/auth/organization";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
+import { formatTnd } from "@/lib/domain/money";
+import Link from "next/link";
 import { Alert, Card, EmptyState, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 import { SupplierForm } from "./supplier-form";
@@ -24,6 +26,8 @@ export default async function SuppliersPage() {
     .order("is_active", { ascending: false })
     .order("name");
   if (error) logger.error("suppliers.load_failed", { organizationId: orgId, code: error.code });
+  const { data: balances } = await supabase.rpc("supplier_balances", { p_organization_id: orgId });
+  const balance = new Map((balances ?? []).map((b) => [b.supplier_id, b.balance_millimes]));
 
   return (
     <>
@@ -41,9 +45,15 @@ export default async function SuppliersPage() {
               <span className="font-medium">{s.name}</span>
               <span className="text-sm text-muted">
                 {[s.phone, s.is_active ? null : fr.settings.inactive].filter(Boolean).join(" · ")}
+                {(balance.get(s.id) ?? 0) > 0 ? (
+                  <span className="ms-2 font-medium text-danger tabular-nums">{fr.purchases.supplier.owes(formatTnd(balance.get(s.id) ?? 0))}</span>
+                ) : null}
               </span>
             </summary>
-            <div className="border-t border-border p-4">
+            <div className="space-y-3 border-t border-border p-4">
+              <Link href={`/app/suppliers/${s.id}`} className="inline-block text-sm text-primary hover:underline">
+                {fr.purchases.supplier.account} →
+              </Link>
               <SupplierForm
                 organizationId={orgId}
                 supplier={{
@@ -58,7 +68,6 @@ export default async function SuppliersPage() {
             </div>
           </details>
         ))}
-        <p className="text-xs text-muted">{t.later}</p>
       </div>
     </>
   );

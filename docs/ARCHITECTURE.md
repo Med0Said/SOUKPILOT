@@ -185,6 +185,17 @@ owner/manager only (fraud risk at the till).
 sale row lock serializes payments/returns on one sale. Both are covered by
 forced-overlap tests on PostgreSQL and mutation-checked.
 
+### ADR-015 Purchasing reuses the stock receipt
+*Decision*: a receipt against a purchase order is an ordinary `stock_receipts`
+document linked to the order and its lines, created through the same stock
+write path. Supplier balances are derived from receipts (goods actually
+received at their recorded cost) and supplier payments — there is no
+separate supplier-invoice document in the MVP.
+*Why*: one place where stock enters, one ledger, no double counting between
+"received" and "invoiced". Direct receipts (M3) with a supplier count too.
+*Limits*: invoice-level matching (price differences, credit notes), supplier
+returns and payment allocation to specific orders are not modelled yet.
+
 ### ADR-009 French-first, RTL-ready
 Strings live in `src/i18n/fr.ts`; layout uses logical properties
 (`ms-`, `pe-`, `border-e`, `text-start`) so Arabic can be enabled by switching

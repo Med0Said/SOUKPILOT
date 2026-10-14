@@ -58,7 +58,7 @@ Legend: ✅ done & tested · 🟡 partial · ⬜ not started · ⛔ blocked (nee
 | Negative-stock override setting | ⬜ | Not offered (spec: no negative stock by default) |
 | Stock UI exercised with a signed-in user | ⛔ | Same blocker as M1/M2 (needs Supabase Auth) |
 
-## Milestone 4 — Sales (current)
+## Milestone 4 — Sales
 
 | Item | Status | Notes |
 | --- | --- | --- |
@@ -77,8 +77,19 @@ Legend: ✅ done & tested · 🟡 partial · ⬜ not started · ⛔ blocked (nee
 | Fiscal invoice / VAT | ⬜ | Not planned before verified Tunisian rules and local review |
 | Sales UI exercised with a signed-in user | ⛔ | Needs a running Supabase Auth |
 
-## Milestone 5 — Purchasing
-⬜ purchase orders, idempotent goods receipts, supplier payments and balances (suppliers table exists).
+## Milestone 5 — Purchasing (current)
+
+| Item | Status | Notes |
+| --- | --- | --- |
+| Supplier management (M2) + supplier account page | ✅ | Purchases, payments, balance |
+| Purchase orders: draft, place (numbered), cancel, close | ✅ | Ordering never moves stock |
+| Receipts against orders (partial, capped, idempotent, concurrent-safe) | ✅ | Cost override + optional cost update |
+| Supplier payments and refunds received | ✅ | Immutable, idempotent |
+| Outstanding supplier balances | ✅ | Definition in DATABASE_SCHEMA §2e |
+| Purchase history | ✅ | Orders list, receipts per order and per supplier |
+| Supplier returns (`supplier_return` movements) | ⬜ | Not implemented; use an approved stock adjustment meanwhile |
+| Supplier invoices / credit notes, payment allocation to orders | ⬜ | Out of MVP scope (ADR-015) |
+| Purchasing UI exercised with a signed-in user | ⛔ | Needs a running Supabase Auth |
 
 ## Milestone 6 — Reports, dashboard, mobile, PWA
 ⬜ documented metrics, timezone-correct date ranges, PWA manifest/installation, barcode scanning via camera (Permissions-Policy already allows `camera=(self)`).

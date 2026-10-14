@@ -37,6 +37,8 @@ export const PERMISSIONS = {
   "sales.viewMargin": ["owner", "manager"],
   "customers.manage": ["owner", "manager"],
   "paymentMethods.manage": ["owner", "manager"],
+  /** Purchase orders, receipts against orders, supplier payments and balances. */
+  "purchasing.manage": ["owner", "manager"],
 } as const satisfies Record<string, readonly OrgRole[]>;
 
 export type Permission = keyof typeof PERMISSIONS;

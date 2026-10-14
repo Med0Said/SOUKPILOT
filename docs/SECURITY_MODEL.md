@@ -75,6 +75,7 @@ Last updated 2026-10-13 (Milestone 1).
 | Edit customers, manage payment methods | ✓ | ✓ | – |
 | See cost snapshots / estimated margin on sales | ✓ | ✓ | – |
 | Change the cashier discount limit | ✓ | – | – |
+| Purchase orders, receipts against orders, supplier payments and balances | ✓ | ✓ | – |
 
 Invariants: nobody changes their own role; owners cannot be invited (only
 promoted by an owner); an organization always keeps ≥ 1 owner (trigger).

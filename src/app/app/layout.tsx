@@ -17,6 +17,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     { href: "/app/customers", label: fr.nav.customers, desktopOnly: true },
     { href: "/app/catalog", label: fr.nav.catalog },
     { href: "/app/stock", label: fr.nav.stock },
+    ...(can(membership.role, "purchasing.manage")
+      ? [{ href: "/app/purchases", label: fr.nav.purchases, desktopOnly: true }]
+      : []),
     ...(can(membership.role, "suppliers.manage")
       ? [{ href: "/app/suppliers", label: fr.nav.suppliers, desktopOnly: true }]
       : []),

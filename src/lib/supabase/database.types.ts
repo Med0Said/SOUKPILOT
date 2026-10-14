@@ -12,6 +12,7 @@ export type InvitationStatus = "pending" | "accepted" | "declined" | "revoked";
 export type LocaleCode = "fr" | "ar";
 export type PaymentMethodKind = "cash" | "card" | "transfer" | "check" | "mobile" | "other";
 export type SaleStatus = "draft" | "finalized" | "cancelled";
+export type PurchaseOrderStatus = "draft" | "ordered" | "partially_received" | "received" | "closed" | "cancelled";
 export type StockMovementType =
   | "opening"
   | "purchase_receipt"
@@ -299,13 +300,23 @@ export type Database = {
           idempotency_key: string;
           created_by: string | null;
           created_at: string;
+          total_cost_millimes: number;
+          lines_without_cost: number;
+          purchase_order_id: string | null;
         };
         Insert: never;
         Update: never;
         Relationships: [];
       };
       stock_receipt_lines: {
-        Row: { receipt_id: string; organization_id: string; variant_id: string; quantity: number; unit_cost_millimes: number | null };
+        Row: {
+          receipt_id: string;
+          organization_id: string;
+          variant_id: string;
+          quantity: number;
+          unit_cost_millimes: number | null;
+          purchase_order_item_id: string | null;
+        };
         Insert: never;
         Update: never;
         Relationships: [];
@@ -532,6 +543,73 @@ export type Database = {
           quantity: number;
           restock: boolean;
           amount_millimes: number;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      purchase_orders: {
+        Row: {
+          id: string;
+          organization_id: string;
+          number: number | null;
+          status: PurchaseOrderStatus;
+          supplier_id: string;
+          location_id: string;
+          expected_date: string | null;
+          reference: string | null;
+          note: string | null;
+          ordered_total_millimes: number;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          ordered_by: string | null;
+          ordered_at: string | null;
+          closed_by: string | null;
+          closed_at: string | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [
+          {
+            foreignKeyName: "purchase_orders_organization_id_supplier_id_fkey";
+            columns: ["organization_id", "supplier_id"];
+            isOneToOne: false;
+            referencedRelation: "suppliers";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      purchase_order_items: {
+        Row: {
+          id: string;
+          organization_id: string;
+          purchase_order_id: string;
+          line_no: number;
+          variant_id: string;
+          quantity: number;
+          unit_cost_millimes: number;
+          received_quantity: number;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      supplier_payments: {
+        Row: {
+          id: string;
+          organization_id: string;
+          supplier_id: string;
+          method_id: string;
+          kind: "payment" | "refund";
+          amount_millimes: number;
+          paid_on: string;
+          reference: string | null;
+          note: string | null;
+          purchase_order_id: string | null;
+          idempotency_key: string;
+          created_by: string | null;
+          created_at: string;
         };
         Insert: never;
         Update: never;
@@ -820,6 +898,64 @@ export type Database = {
       check_sales_consistency: {
         Args: { p_organization_id: string };
         Returns: { sale_id: string; problem: string }[];
+      };
+      save_purchase_order: {
+        Args: {
+          p_organization_id: string;
+          p_purchase_order_id: string | null;
+          p_supplier_id: string;
+          p_location_id: string;
+          p_expected_date: string | null;
+          p_reference: string | null;
+          p_note: string | null;
+          p_lines: Json;
+        };
+        Returns: string;
+      };
+      place_purchase_order: { Args: { p_purchase_order_id: string }; Returns: number };
+      cancel_purchase_order: { Args: { p_purchase_order_id: string }; Returns: undefined };
+      close_purchase_order: { Args: { p_purchase_order_id: string }; Returns: undefined };
+      receive_purchase_order: {
+        Args: {
+          p_purchase_order_id: string;
+          p_lines: Json;
+          p_reference: string | null;
+          p_note: string | null;
+          p_update_costs: boolean;
+          p_idempotency_key: string;
+        };
+        Returns: string;
+      };
+      record_supplier_payment: {
+        Args: {
+          p_organization_id: string;
+          p_supplier_id: string;
+          p_method_id: string;
+          p_kind: "payment" | "refund";
+          p_amount_millimes: number;
+          p_paid_on: string;
+          p_reference: string | null;
+          p_note: string | null;
+          p_purchase_order_id: string | null;
+          p_idempotency_key: string;
+        };
+        Returns: string;
+      };
+      supplier_balances: {
+        Args: { p_organization_id: string };
+        Returns: {
+          supplier_id: string;
+          supplier_name: string;
+          purchases_millimes: number;
+          paid_millimes: number;
+          balance_millimes: number;
+          receipts_without_cost: number;
+          last_receipt_at: string | null;
+        }[];
+      };
+      check_purchasing_consistency: {
+        Args: { p_organization_id: string };
+        Returns: { reference_id: string; problem: string }[];
       };
     };
     Enums: {

@@ -214,6 +214,42 @@ sales (draft → finalized | cancelled) ──┬── sale_items ── sale_i
 sales total − returns; *payments by method* = money received minus refunds that day;
 *credit given* = balance still due on that day's sales. Not an accounting ledger; no taxes.
 
+## 2e. Purchasing (implemented, Milestone 5)
+
+```
+suppliers ──┬── purchase_orders (draft → ordered → partially_received → received | closed; cancelled)
+            │        └── purchase_order_items (quantity, unit_cost, received_quantity)
+            │                    ▲
+            ├── stock_receipts (+ purchase_order_id, total_cost_millimes, lines_without_cost)
+            │        └── stock_receipt_lines (+ purchase_order_item_id)  ── stock_movements
+            └── supplier_payments (payment | refund received)
+```
+
+**Rules.**
+1. Placing an order never moves stock. Receiving does, through `private.apply_stock_lines`.
+2. A receipt against an order locks the order row, checks `quantity ≤ ordered − received` per line
+   (`receipt_exceeds_ordered`), and `CHECK (received_quantity ≤ quantity)` is the backstop.
+   Concurrent receipts: verified on PostgreSQL; with the order lock removed the CHECK still blocks
+   the over-receipt (mutation-tested).
+3. Only drafts are editable; placed orders are frozen except `received_quantity` (trigger
+   `purchase_order_locked`). Cancel = nothing received yet; close = stop waiting for the rest.
+4. Receipt totals are maintained from their lines by trigger (also for M3 direct receipts,
+   backfilled); receipt lines and supplier payments are immutable.
+5. **Supplier balance** = Σ receipt values from that supplier (lines with a known cost) −
+   Σ payments + Σ refunds received. Negative = advance paid. Receipts with costless lines are
+   flagged, not guessed.
+6. Everything here is owner/manager only (it carries purchase costs).
+
+| Function | Effect |
+| --- | --- |
+| `save_purchase_order(org, po?, supplier, location, expected_date, reference, note, lines)` | create/replace a draft (cost required per line) |
+| `place_purchase_order(po)` | draft → ordered, number BC-000001… |
+| `cancel_purchase_order(po)` / `close_purchase_order(po)` | see rule 3 |
+| `receive_purchase_order(po, lines, reference, note, update_costs, key)` | idempotent receipt; optional cost override per line and cost update |
+| `record_supplier_payment(org, supplier, method, kind, amount, paid_on, reference, note, po?, key)` | idempotent payment or refund received |
+| `supplier_balances(org)` | purchases, paid, balance per supplier |
+| `check_purchasing_consistency(org)` | received quantities, receipt totals, order totals and statuses vs. details — must be empty |
+
 ## 3. Tenant isolation strategy
 
 1. RLS on every table; policies reference only `auth.uid()` through
@@ -233,10 +269,7 @@ Inventory (M3) is implemented — see §2c.
 
 Sales (M4) is implemented — see §2d.
 
-### Purchasing (M5)
-- `suppliers`, `purchase_orders`, `purchase_order_items (ordered_qty, received_qty ≤ ordered_qty, unit_cost)`,
-  `goods_receipts`, `goods_receipt_items` (one receipt = one idempotent document),
-  `supplier_payments`. Ordering never moves stock; receipts do.
+Purchasing (M5) is implemented — see §2e.
 
 ### Customers, cash, subscriptions (M4–M7)
 - Customers are implemented (M4, §2d).
@@ -252,6 +285,6 @@ Sales (M4) is implemented — see §2d.
 | Membership / invitation changes | the respective function |
 | Receipt, opening stock, adjustment approval, count approval, transfer | one function each (M3) |
 | Finalize sale, record payment, return (+ refund), refund | one function each (M4) |
-| Goods receipt | one function (M5) |
+| Purchase order placement, receipt against an order, supplier payment | one function each (M5) |
 
 Nothing that changes stock or money is composed from several client calls.
