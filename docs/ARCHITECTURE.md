@@ -252,6 +252,15 @@ in localStorage (a per-device convenience: a view is only a query string).
 - Database tests run with the session time zone set to UTC, like production
   servers; a developer PC set to Tunisia hid a time-zone bug in a mutation test.
 
+### ADR-019 Integrations: off by default, gated in the database, suggestions only (phase 4)
+*Decisions*: free keyless providers only (Open Food/Beauty Facts, fawazahmed0
+exchange-api), called from the server through adapters with timeouts,
+retries, size caps, validation and caches. A per-organization switch (owner,
+audited) and quotas are checked by `consume_integration_call` before each
+call. Results are suggestions the user applies explicitly; rates are never
+stored. E-mail waits for a domain (see docs/INTEGRATIONS.md). End-to-end
+tests use offline fixtures, only accepted on a localhost site.
+
 ### ADR-009 French-first, RTL-ready
 Strings live in `src/i18n/fr.ts`; layout uses logical properties
 (`ms-`, `pe-`, `border-e`, `text-start`) so Arabic can be enabled by switching

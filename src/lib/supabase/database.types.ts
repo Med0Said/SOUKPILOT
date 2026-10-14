@@ -5,6 +5,8 @@
  * stack was available to generate them). Once `npx supabase start` works,
  * regenerate with `npm run db:types` and diff against this file.
  */
+export type IntegrationKey = "barcode_lookup" | "exchange_rates";
+
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type OrgRole = "owner" | "manager" | "cashier";
@@ -131,6 +133,20 @@ export type Database = {
         Row: { id: string; organization_id: string; name: string; created_at: string; updated_at: string };
         Insert: { organization_id: string; name: string };
         Update: { name?: string };
+        Relationships: [];
+      };
+      organization_integrations: {
+        Row: {
+          id: string;
+          organization_id: string;
+          integration: IntegrationKey;
+          enabled: boolean;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: never;
         Relationships: [];
       };
       suppliers: {
@@ -1005,6 +1021,14 @@ export type Database = {
           refunded_millimes: number;
           net_millimes: number;
         }[];
+      };
+      set_integration_enabled: {
+        Args: { p_organization_id: string; p_integration: IntegrationKey; p_enabled: boolean };
+        Returns: undefined;
+      };
+      consume_integration_call: {
+        Args: { p_organization_id: string; p_integration: IntegrationKey };
+        Returns: undefined;
       };
       dashboard_attention: {
         Args: { p_organization_id: string };

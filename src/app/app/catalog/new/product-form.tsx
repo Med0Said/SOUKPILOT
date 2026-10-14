@@ -3,6 +3,7 @@
 import { useActionState, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckboxField, SelectField, TextAreaField, TextField } from "@/components/ui/field";
+import { BarcodeLookup } from "@/components/integrations/barcode-lookup";
 import { Alert, ActionMessage } from "@/components/ui/layout";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { initialActionState } from "@/lib/actions";
@@ -39,10 +40,13 @@ export function ProductForm({
   organizationId,
   categories,
   suppliers,
+  barcodeLookup = false,
 }: {
   organizationId: string;
   categories: { id: string; name: string }[];
   suppliers: { id: string; name: string }[];
+  /** Barcode pre-fill integration switched on for this organization. */
+  barcodeLookup?: boolean;
 }) {
   const [state, action] = useActionState(createProductAction, initialActionState);
   const formId = useId();
@@ -246,6 +250,7 @@ export function ProductForm({
                   onChange={(ev) => updateVariant(v.key, { barcode: ev.target.value })}
                   error={e("barcode")}
                 />
+                {barcodeLookup ? <BarcodeLookup organizationId={organizationId} code={v.barcode} onUseName={setName} /> : null}
                 {variants.length > 1 ? (
                   <div className="flex items-end">
                     <Button variant="ghost" onClick={() => setVariants((rows) => rows.filter((r) => r.key !== v.key))}>

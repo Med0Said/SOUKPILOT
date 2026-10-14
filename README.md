@@ -115,6 +115,6 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) and
 ## Documentation
 
 [Product spec](docs/PRODUCT_SPEC.md) · [Brand & design system](docs/BRAND.md) · [Architecture](docs/ARCHITECTURE.md) ·
-[Database schema](docs/DATABASE_SCHEMA.md) · [Reports](docs/REPORTS.md) · [Security model](docs/SECURITY_MODEL.md) ·
+[Database schema](docs/DATABASE_SCHEMA.md) · [Reports](docs/REPORTS.md) · [Integrations](docs/INTEGRATIONS.md) · [Security model](docs/SECURITY_MODEL.md) ·
 [Odoo research](docs/ODOO_WORKFLOW_RESEARCH.md) · [Roadmap](docs/DEVELOPMENT_ROADMAP.md) ·
 [Deployment](docs/DEPLOYMENT.md) · [Backup & restore](docs/BACKUP_AND_RESTORE.md)

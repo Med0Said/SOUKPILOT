@@ -105,6 +105,7 @@ export type PerTable = [
   Expect<RowCheck<HT["stock_transfers"]["Row"], GT["stock_transfers"]["Row"]>>,
   Expect<RowCheck<HT["supplier_payments"]["Row"], GT["supplier_payments"]["Row"]>>,
   Expect<RowCheck<HT["suppliers"]["Row"], GT["suppliers"]["Row"]>>,
+  Expect<RowCheck<HT["organization_integrations"]["Row"], GT["organization_integrations"]["Row"]>>,
 ];
 
 export type PerFunction = [
@@ -115,6 +116,7 @@ export type PerFunction = [
   Expect<FunctionResults["check_sales_consistency"]>,
   Expect<FunctionResults["check_stock_reconciliation"]>,
   Expect<FunctionResults["close_purchase_order"]>,
+  Expect<FunctionResults["consume_integration_call"]>,
   Expect<FunctionResults["commit_catalog_import"]>,
   Expect<FunctionResults["create_invitation"]>,
   Expect<FunctionResults["create_organization"]>,
@@ -148,6 +150,7 @@ export type PerFunction = [
   Expect<FunctionResults["review_stock_count"]>,
   Expect<FunctionResults["revoke_invitation"]>,
   Expect<FunctionResults["sales_daily_summary"]>,
+  Expect<FunctionResults["set_integration_enabled"]>,
   Expect<FunctionResults["save_purchase_order"]>,
   Expect<FunctionResults["save_sale_draft"]>,
   Expect<FunctionResults["save_variant"]>,

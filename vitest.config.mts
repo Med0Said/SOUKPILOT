@@ -4,7 +4,11 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   resolve: {
-    alias: { "@": path.resolve(path.dirname(fileURLToPath(import.meta.url)), "src") },
+    alias: {
+      "@": path.resolve(path.dirname(fileURLToPath(import.meta.url)), "src"),
+      // Next.js enforces "server-only" at build time; in unit tests it is a no-op.
+      "server-only": path.resolve(path.dirname(fileURLToPath(import.meta.url)), "tests/stubs/server-only.ts"),
+    },
   },
   test: {
     projects: [

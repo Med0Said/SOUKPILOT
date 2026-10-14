@@ -198,3 +198,10 @@ browsers, and try to open the other tenant's data through the API, e.g.
 
 Any failure of a tenant-isolation test, any table without RLS, or any client
 path that uses the service-role key blocks release.
+
+## Outbound calls (integrations, phase 4)
+
+Only from the server, only when the owner switched the integration on
+(enforced in the database), sending only a barcode or nothing (rate list).
+No user identifiers, cookies or business records leave the system. Provider
+answers are validated and shown as suggestions; see docs/INTEGRATIONS.md.

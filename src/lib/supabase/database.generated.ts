@@ -143,6 +143,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"organization_integrations": {
+                  Row: {
+                    "created_at": string,"enabled": boolean,"id": string,"integration": string,"organization_id": string,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"enabled"?: boolean,"id"?: string,"integration": string,"organization_id": string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"enabled"?: boolean,"id"?: string,"integration"?: string,"organization_id"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "organization_integrations_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"organization_invitations": {
                   Row: {
                     "created_at": string,"email": string,"expires_at": string,"id": string,"invited_by": string | null,"organization_id": string,"responded_at": string | null,"responded_by": string | null,"role": Database["public"]['Enums']["org_role"],"status": Database["public"]['Enums']["invitation_status"]
@@ -909,6 +929,9 @@ isOneToOne: false
 "commit_catalog_import":
 { Args: { "p_batch_id": string }; Returns: Json
                            },
+"consume_integration_call":
+{ Args: { "p_integration": string,"p_organization_id": string }; Returns: undefined
+                           },
 "create_invitation":
 { Args: { "p_email": string,"p_organization_id": string,"p_role": Database["public"]['Enums']["org_role"] }; Returns: string
                            },
@@ -1051,6 +1074,9 @@ isOneToOne: false
 { Args: { "p_limit"?: number,"p_location_id"?: string,"p_organization_id": string,"p_query": string }; Returns: {
               "barcode": string,"option_values": (string)[],"price_millimes": number,"product_id": string,"product_name": string,"quantity": number,"sku": string,"track_stock": boolean,"variant_id": string
             }[]
+                           },
+"set_integration_enabled":
+{ Args: { "p_enabled": boolean,"p_integration": string,"p_organization_id": string }; Returns: undefined
                            },
 "stage_catalog_import":
 { Args: { "p_file_name": string,"p_organization_id": string,"p_products": Json,"p_summary"?: Json }; Returns: string

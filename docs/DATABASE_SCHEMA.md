@@ -279,6 +279,19 @@ Definitions: docs/REPORTS.md.
 
 Periods are validated by `private.require_report_period` (from ≤ to, ≤ 367 days).
 
+## 2h. Integrations (implemented, phase 4 — `20261020090000_integrations.sql`)
+
+`organization_integrations (organization_id, integration, enabled, updated_by)`:
+`integration` ∈ `barcode_lookup`, `exchange_rates`; RLS select for members;
+no direct writes; audited (`integration.created/updated`).
+
+| Function | Purpose |
+| --- | --- |
+| `set_integration_enabled(org, integration, enabled)` | owner only |
+| `consume_integration_call(org, integration)` | gate before each external call: member, switched on, quotas (`integration_disabled`, `rate_limited`) |
+
+Details and providers: docs/INTEGRATIONS.md.
+
 ## 3. Tenant isolation strategy
 
 1. RLS on every table; policies reference only `auth.uid()` through

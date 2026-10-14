@@ -5,6 +5,8 @@ import { loadLocations, loadVariantInfo } from "@/lib/server/variants";
 import { formatTndInput } from "@/lib/domain/money";
 import { Alert, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
+import { CurrencyConverter } from "@/components/integrations/currency-converter";
+import { enabledIntegrations } from "@/lib/server/integrations";
 import { PurchaseOrderForm, type PoLine } from "../_components/purchase-order-form";
 
 export const metadata: Metadata = { title: fr.purchases.form.title };
@@ -16,9 +18,10 @@ export default async function NewPurchaseOrderPage({ searchParams }: { searchPar
   if (!hasPermission(context, "purchasing.manage")) return <Alert tone="error">{fr.catalog.forbidden}</Alert>;
 
   const supabase = await createSupabaseServerClient();
-  const [locations, suppliers] = await Promise.all([
+  const [locations, suppliers, integrations] = await Promise.all([
     loadLocations(supabase, orgId),
     supabase.from("suppliers").select("id, name").eq("organization_id", orgId).eq("is_active", true).order("name"),
+    enabledIntegrations(orgId),
   ]);
 
   let draft: Parameters<typeof PurchaseOrderForm>[0]["draft"];
@@ -58,6 +61,11 @@ export default async function NewPurchaseOrderPage({ searchParams }: { searchPar
   return (
     <>
       <PageHeader title={draft ? fr.purchases.form.editTitle : fr.purchases.form.title} />
+      {integrations.has("exchange_rates") ? (
+        <div className="mb-4">
+          <CurrencyConverter organizationId={orgId} />
+        </div>
+      ) : null}
       <PurchaseOrderForm
         organizationId={orgId}
         suppliers={suppliers.data ?? []}

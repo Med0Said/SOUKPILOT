@@ -3,6 +3,7 @@ import { hasPermission, requireOrgContext } from "@/lib/auth/organization";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Alert, Breadcrumbs, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
+import { enabledIntegrations } from "@/lib/server/integrations";
 import { ProductForm } from "./product-form";
 
 export const metadata: Metadata = { title: fr.catalog.newProduct };
@@ -15,16 +16,22 @@ export default async function NewProductPage() {
   }
 
   const supabase = await createSupabaseServerClient();
-  const [categories, suppliers] = await Promise.all([
+  const [categories, suppliers, integrations] = await Promise.all([
     supabase.from("categories").select("id, name").eq("organization_id", orgId).order("name"),
     supabase.from("suppliers").select("id, name").eq("organization_id", orgId).eq("is_active", true).order("name"),
+    enabledIntegrations(orgId),
   ]);
 
   return (
     <>
       <Breadcrumbs items={[{ label: fr.nav.catalog, href: "/app/catalog" }, { label: fr.catalog.newProduct }]} />
       <PageHeader title={fr.catalog.newProduct} />
-      <ProductForm organizationId={orgId} categories={categories.data ?? []} suppliers={suppliers.data ?? []} />
+      <ProductForm
+        organizationId={orgId}
+        categories={categories.data ?? []}
+        suppliers={suppliers.data ?? []}
+        barcodeLookup={integrations.has("barcode_lookup")}
+      />
     </>
   );
 }

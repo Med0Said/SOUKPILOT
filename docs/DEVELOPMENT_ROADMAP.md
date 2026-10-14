@@ -5,6 +5,18 @@ take priority over the schedule. Last updated 2026-10-14.
 
 Legend: ✅ done & tested · 🟡 partial · ⬜ not started · ⛔ blocked (needs something outside the repo)
 
+## Modernization phase 4 — Integrations, free tier (2026-10-14)
+
+| Item | Status | Notes |
+| --- | --- | --- |
+| Adapter layer: timeouts, retry, size cap, validation, caches, provider status | ✅ | Unit tests with a fake fetch; one live check against the real providers |
+| Per-organization switches (owner, audited) and quotas enforced in the database | ✅ | DB tests |
+| Paramètres → Intégrations page (provider, licence, data sent, limits, last call) | ✅ | E2E |
+| Barcode pre-fill on new articles (Open Food Facts / Open Beauty Facts), applied only on click, ODbL attribution | ✅ | E2E with offline fixtures |
+| Indicative currency → TND converter (purchases, Intégrations page) | ✅ | E2E; never stored |
+| Transactional e-mail | ⛔ | Needs a domain (SPF/DKIM); documented in docs/INTEGRATIONS.md |
+| Public holidays | ⬜ | Not added: Nager.Date lacks the Islamic holidays for Tunisia |
+
 ## Modernization phase 3 — Reports, dashboards, PWA (Milestone 6, 2026-10-14)
 
 | Item | Status | Notes |

@@ -22,6 +22,8 @@ const DB_ERROR_MESSAGES: Record<string, string> = {
   invitation_expired: "Cette invitation a expiré. Demandez-en une nouvelle.",
   email_not_confirmed: "Confirmez d'abord votre adresse e-mail.",
   rate_limited: "Trop de demandes en peu de temps. Réessayez dans une heure.",
+  integration_disabled: "Cette intégration est désactivée. Le propriétaire peut l'activer dans Paramètres → Intégrations.",
+  invalid_integration: "Intégration inconnue.",
   duplicate_sku: "Ce SKU est déjà utilisé par un autre article de la boutique.",
   duplicate_barcode: "Ce code-barres est déjà utilisé par un autre article de la boutique.",
   duplicate_variant_options: "Deux variantes ont la même combinaison d'options.",
