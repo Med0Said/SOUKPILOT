@@ -706,6 +706,7 @@ export type Database = {
           p_include_inactive?: boolean;
           p_limit?: number;
           p_offset?: number;
+          p_sort?: string;
         };
         Returns: {
           product_id: string;
@@ -819,6 +820,7 @@ export type Database = {
           p_low_only?: boolean;
           p_limit?: number;
           p_offset?: number;
+          p_sort?: string;
         };
         Returns: {
           variant_id: string;
@@ -906,6 +908,66 @@ export type Database = {
       customer_balances: {
         Args: { p_organization_id: string };
         Returns: { customer_id: string; customer_name: string; sales_count: number; balance_millimes: number }[];
+      };
+      search_customers: {
+        Args: {
+          p_organization_id: string;
+          p_query?: string;
+          p_due_only?: boolean;
+          p_sort?: string;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: {
+          customer_id: string;
+          name: string;
+          phone: string | null;
+          is_active: boolean;
+          created_at: string;
+          sales_count: number;
+          balance_millimes: number;
+          total_count: number;
+        }[];
+      };
+      search_sales: {
+        Args: {
+          p_organization_id: string;
+          p_status?: string;
+          p_from?: string | null;
+          p_to?: string | null;
+          p_customer_id?: string | null;
+          p_due_only?: boolean;
+          p_query?: string;
+          p_sort?: string;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: {
+          sale_id: string;
+          number: number | null;
+          status: "draft" | "finalized";
+          customer_id: string | null;
+          customer_name: string | null;
+          total_millimes: number;
+          returned_millimes: number;
+          paid_millimes: number;
+          due_millimes: number;
+          created_at: string;
+          finalized_at: string | null;
+          total_count: number;
+        }[];
+      };
+      global_search: {
+        Args: { p_organization_id: string; p_query: string; p_limit_per_kind?: number };
+        Returns: {
+          kind: "product" | "customer" | "supplier" | "sale" | "purchase_order";
+          id: string;
+          label: string | null;
+          detail: string | null;
+          number: number | null;
+          amount_millimes: number | null;
+          occurred_at: string | null;
+        }[];
       };
       check_sales_consistency: {
         Args: { p_organization_id: string };

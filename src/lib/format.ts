@@ -20,5 +20,31 @@ export function formatDateTime(iso: string, timeZone: string): string {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    // CLDR's fr-TN default is a 12-hour clock ("01:00 PM"); shops use 24 h.
+    hourCycle: "h23",
   }).format(new Date(iso));
+}
+
+/** Spreadsheet-friendly, sortable local date: "2026-03-10". */
+export function formatIsoDate(iso: string, timeZone: string): string {
+  // en-CA formats as YYYY-MM-DD.
+  return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(iso));
+}
+
+/** Spreadsheet-friendly, sortable local date and time: "2026-03-10 13:05". */
+export function formatIsoDateTime(iso: string, timeZone: string): string {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    })
+      .formatToParts(new Date(iso))
+      .map((p) => [p.type, p.value]),
+  );
+  return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}`;
 }

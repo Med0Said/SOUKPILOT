@@ -93,13 +93,33 @@ export function escapeFormula(value: string): string {
   return /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
 }
 
+/**
+ * A cell known to hold a number ("-12,500", "42"): written without the
+ * formula guard so spreadsheets read it as a number, not text. Anything that
+ * is not strictly a decimal number is still escaped.
+ */
+export type CsvNumber = { readonly numeric: string };
+export type CsvCell = string | number | CsvNumber;
+
+export function csvNumber(value: string | number): CsvNumber {
+  return { numeric: String(value) };
+}
+
+const DECIMAL = /^-?\d+([.,]\d+)?$/;
+
+function cellText(cell: CsvCell): string {
+  if (typeof cell === "number") return Number.isFinite(cell) ? String(cell) : "";
+  if (typeof cell === "object") return DECIMAL.test(cell.numeric) ? cell.numeric : escapeFormula(cell.numeric);
+  return escapeFormula(cell);
+}
+
 /** Serializes rows; quotes cells containing the delimiter, quotes or newlines. */
-export function toCsv(rows: readonly (readonly string[])[], delimiter = ";"): string {
+export function toCsv(rows: readonly (readonly CsvCell[])[], delimiter = ";"): string {
   return rows
     .map((row) =>
       row
         .map((raw) => {
-          const value = escapeFormula(raw);
+          const value = cellText(raw);
           return /["\r\n]/.test(value) || value.includes(delimiter) ? `"${value.replaceAll('"', '""')}"` : value;
         })
         .join(delimiter),

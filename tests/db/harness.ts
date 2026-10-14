@@ -13,6 +13,7 @@ import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
 import { pg_trgm } from "@electric-sql/pglite/contrib/pg_trgm";
+import { unaccent } from "@electric-sql/pglite/contrib/unaccent";
 import pg from "pg";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -41,7 +42,7 @@ const INT8_OID = 20;
 pg.types.setTypeParser(INT8_OID, (value) => Number(value));
 
 async function createPgliteDb(): Promise<TestDb> {
-  const db = new PGlite({ extensions: { pg_trgm }, parsers: { [INT8_OID]: (v: string) => Number(v) } });
+  const db = new PGlite({ extensions: { pg_trgm, unaccent }, parsers: { [INT8_OID]: (v: string) => Number(v) } });
   return {
     kind: "pglite",
     query: (sql, params) => db.query(sql, params),

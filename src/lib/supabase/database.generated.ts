@@ -945,6 +945,11 @@ isOneToOne: false
               "barcode": string,"is_active": boolean,"option_values": (string)[],"price_millimes": number,"product_id": string,"product_name": string,"sku": string,"variant_id": string
             }[]
                            },
+"global_search":
+{ Args: { "p_limit_per_kind"?: number,"p_organization_id": string,"p_query": string }; Returns: {
+              "amount_millimes": number,"detail": string,"id": string,"kind": string,"label": string,"number": number,"occurred_at": string
+            }[]
+                           },
 "list_my_invitations":
 { Args: Record<PropertyKey, never>; Returns: {
               "created_at": string,"expires_at": string,"id": string,"organization_id": string,"organization_name": string,"role": Database["public"]['Enums']["org_role"]
@@ -1009,9 +1014,19 @@ isOneToOne: false
 "save_variant":
 { Args: { "p_organization_id": string,"p_product_id": string,"p_variant": Json,"p_variant_id": string }; Returns: string
                            },
+"search_customers":
+{ Args: { "p_due_only"?: boolean,"p_limit"?: number,"p_offset"?: number,"p_organization_id": string,"p_query"?: string,"p_sort"?: string }; Returns: {
+              "balance_millimes": number,"created_at": string,"customer_id": string,"is_active": boolean,"name": string,"phone": string,"sales_count": number,"total_count": number
+            }[]
+                           },
 "search_products":
-{ Args: { "p_category_id"?: string,"p_include_inactive"?: boolean,"p_limit"?: number,"p_offset"?: number,"p_organization_id": string,"p_query"?: string }; Returns: {
+{ Args: { "p_category_id"?: string,"p_include_inactive"?: boolean,"p_limit"?: number,"p_offset"?: number,"p_organization_id": string,"p_query"?: string,"p_sort"?: string }; Returns: {
               "category_name": string,"is_active": boolean,"max_price_millimes": number,"min_price_millimes": number,"name": string,"product_id": string,"total_count": number,"track_stock": boolean,"variant_count": number
+            }[]
+                           },
+"search_sales":
+{ Args: { "p_customer_id"?: string,"p_due_only"?: boolean,"p_from"?: string,"p_limit"?: number,"p_offset"?: number,"p_organization_id": string,"p_query"?: string,"p_sort"?: string,"p_status"?: string,"p_to"?: string }; Returns: {
+              "created_at": string,"customer_id": string,"customer_name": string,"due_millimes": number,"finalized_at": string,"number": number,"paid_millimes": number,"returned_millimes": number,"sale_id": string,"status": string,"total_count": number,"total_millimes": number
             }[]
                            },
 "search_variants":
@@ -1023,7 +1038,7 @@ isOneToOne: false
 { Args: { "p_file_name": string,"p_organization_id": string,"p_products": Json,"p_summary"?: Json }; Returns: string
                            },
 "stock_overview":
-{ Args: { "p_limit"?: number,"p_location_id"?: string,"p_low_only"?: boolean,"p_offset"?: number,"p_organization_id": string,"p_query"?: string }; Returns: {
+{ Args: { "p_limit"?: number,"p_location_id"?: string,"p_low_only"?: boolean,"p_offset"?: number,"p_organization_id": string,"p_query"?: string,"p_sort"?: string }; Returns: {
               "barcode": string,"is_low": boolean,"low_stock_threshold": number,"option_values": (string)[],"product_id": string,"product_name": string,"quantity": number,"sku": string,"total_count": number,"variant_id": string
             }[]
                            },
