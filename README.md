@@ -36,7 +36,8 @@ cp .env.example .env.local
 
 ```bash
 npm run db:start      # starts Postgres, Auth, Mailpit…; prints URL + publishable key
-npm run db:reset      # applies supabase/migrations + supabase/seed.sql
+npm run db:migrate    # applies new migrations, keeps your local data
+# or: npm run db:reset  # wipes the local database, re-applies migrations + supabase/seed.sql
 ```
 
 Put the printed API URL and publishable key into `.env.local`, then `npm run dev`
@@ -73,10 +74,16 @@ No secret/service-role key is used by the app.
 | `npm run test:db:pg` | Same suite on a real PostgreSQL server + concurrency tests (set `PG_BIN` or `TEST_DATABASE_URL`) |
 | `npm test` | All tests |
 | `npm run check` | lint + typecheck + all tests |
-| `npm run db:start` / `db:stop` / `db:reset` | Local Supabase stack (Docker) |
-| `npm run db:types` | Generate DB types from the local stack into `src/lib/supabase/database.generated.ts` (compare with the hand-written `database.types.ts`) |
+| `npm run db:start` / `db:stop` / `db:reset` | Local Supabase stack (Docker); `db:reset` wipes local data |
+| `npm run db:migrate` | Apply pending migrations to the local stack without wiping data |
+| `npm run db:types` | Regenerate `src/lib/supabase/database.generated.ts` from the local stack. `npm run typecheck` then verifies the hand-written `database.types.ts` against it (`database.types.check.ts`) |
+| `npm run test:e2e` | Playwright end-to-end tests against the local Supabase stack (needs `db:start`; builds the app into `.next-e2e` and serves it on port 3100) |
 
-End-to-end tests (Playwright) are not set up yet: they need a running Supabase Auth to sign in (Docker or a Supabase project).
+End-to-end tests create fresh, uniquely named accounts and organizations on
+every run and read confirmation emails from the local Mailpit; they never
+delete data. To run the database suite against Supabase's own PostgreSQL:
+`TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres npm run test:db`
+(each test file creates and drops its own temporary database).
 
 ## Migrations
 
@@ -91,10 +98,12 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) and
 
 ## Known limitations
 
-- Auth flows and the signed-in UI have not yet been exercised end-to-end
-  against a running Supabase Auth server (needs Docker or a Supabase project);
-  database logic is tested on PGlite and on a real PostgreSQL 17 server with a
-  Supabase shim (see ADR-004).
+- End-to-end tests cover authentication, the main sale/stock/return/purchasing
+  workflow, invitations, cashier restrictions and tenant isolation; screens
+  such as CSV import, stock counts, transfers and adjustments approval are
+  covered by database tests but not yet by browser tests.
+- `supabase/seed.sql` has still not been executed (the local database used for
+  verification already contained data, so it was not reset).
 - No cash sessions/expenses or cross-period reports yet (Milestone 6+); no
   supplier returns or supplier invoices.
 - Invitations do not send emails; the inviter gets a ready-to-send message.

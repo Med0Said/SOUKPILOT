@@ -43,3 +43,9 @@ next-env.d.ts
 
 # local PostgreSQL test cluster
 /.pgtest/
+
+# Playwright / end-to-end
+/.next-e2e/
+/test-results/
+/playwright-report/
+/e2e/.auth/

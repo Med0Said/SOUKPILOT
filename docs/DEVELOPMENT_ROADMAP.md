@@ -5,20 +5,31 @@ take priority over the schedule. Last updated 2026-10-14.
 
 Legend: ✅ done & tested · 🟡 partial · ⬜ not started · ⛔ blocked (needs something outside the repo)
 
+## Modernization phase 0 — Verification on a real Supabase (2026-10-14)
+
+| Item | Result |
+| --- | --- |
+| All 12 migrations on a real Supabase PostgreSQL (local stack) | ✅ Applied with `supabase migration up` (existing local data kept) |
+| DB test suite on Supabase's PostgreSQL | ✅ 123/123 |
+| Generated types vs hand-written types | ✅ Contract enforced by `npm run typecheck` |
+| E2E: auth, full §12 business workflow, consistency checks, tenant isolation, invitation + cashier rights, phone navigation, purchasing | ✅ 9/9, two consecutive runs |
+| Defect found: built-in 404 page blocked by the CSP (unstyled) | ✅ Fixed with a French `not-found` page |
+| `site_url` (127.0.0.1) ≠ app URL (localhost) in local config | ✅ Aligned; takes effect after `supabase stop && supabase start` |
+
 ## Milestone 1 — Foundation, auth, tenancy
 
 | Item | Status | Notes |
 | --- | --- | --- |
 | Scaffold, architecture, ADRs | ✅ | Next.js 16.4, TS strict, Tailwind 4 |
 | Organizations, roles, membership, invitations, audit log | ✅ | RLS + functions, DB-tested on PGlite **and** real PostgreSQL 17 |
-| Registration, login, email confirmation, password reset | 🟡 | Implemented; ⛔ not exercised against a running Supabase Auth (needs Docker or a Supabase project) |
+| Registration, login, email confirmation, password reset | 🟡 | Sign-up, email confirmation, login, wrong password, sign-out: ✅ E2E. Password reset: not yet E2E |
 | Security tests (2 orgs, 3 roles, anon, direct DB access) | ✅ | Also run on a real PostgreSQL server (`npm run test:db:pg`) |
 | Rate limiting | ✅ | DB-enforced: invitations 30/h/org, import staging 30/h/org, org creation ≤ 5/account; Supabase Auth limits for auth endpoints |
 | Nonce-based CSP | ✅ | Per-request nonce in `src/proxy.ts`; verified in a browser on a production build (hydration OK, no violations) |
 | Invitation delivery | ✅ | Still no email sending (by design); the inviter gets a ready-to-send message with a copy button |
 | Hosting terms verified | ✅ | See docs/DEPLOYMENT.md (checked 2026-10-13) |
-| Generated DB types vs hand-written | ⛔ | Needs `supabase start` (Docker) |
-| E2E tests (Playwright) | ⛔ | Need a running Supabase Auth to sign in; not started |
+| Generated DB types vs hand-written | ✅ | Compile-time contract; found and fixed 2 missing tables and 3 JSON nullability differences |
+| E2E tests (Playwright) | ✅ | 9 tests, see phase 0 below |
 
 ## Milestone 2 — Catalog
 
@@ -37,7 +48,7 @@ Legend: ✅ done & tested · 🟡 partial · ⬜ not started · ⛔ blocked (nee
 | Product images | ⬜ | Deferred: needs Supabase Storage bucket + policies |
 | Accent-insensitive search (é = e) | ⬜ | Needs `unaccent`; planned |
 | Import updates of existing products | ⬜ | Import only creates; updating via CSV needs an explicit, reviewed "update mode" |
-| UI exercised end-to-end with a signed-in user | ⛔ | Same blocker as M1 auth |
+| UI exercised end-to-end with a signed-in user | 🟡 | Product with variants ✅ E2E; CSV import, categories UI not yet |
 
 ## Milestone 3 — Inventory
 
@@ -56,7 +67,7 @@ Legend: ✅ done & tested · 🟡 partial · ⬜ not started · ⛔ blocked (nee
 | Concurrency tests on real PostgreSQL | ✅ | Forced overlap (first transaction held open) |
 | Opening stock from CSV import | ⬜ | Import creates products only; opening stock is entered per location afterwards |
 | Negative-stock override setting | ⬜ | Not offered (spec: no negative stock by default) |
-| Stock UI exercised with a signed-in user | ⛔ | Same blocker as M1/M2 (needs Supabase Auth) |
+| Stock UI exercised with a signed-in user | 🟡 | Opening stock, receipt, overview, movements ✅ E2E; counts, transfers, adjustment approval not yet |
 
 ## Milestone 4 — Sales
 
@@ -75,7 +86,7 @@ Legend: ✅ done & tested · 🟡 partial · ⬜ not started · ⛔ blocked (nee
 | Estimated gross margin per sale (owner/manager) | ✅ | Reports across sales come in M6 |
 | Cash session (opening float, expected vs counted cash) | ⬜ | Planned with Module G (cash & expenses) |
 | Fiscal invoice / VAT | ⬜ | Not planned before verified Tunisian rules and local review |
-| Sales UI exercised with a signed-in user | ⛔ | Needs a running Supabase Auth |
+| Sales UI exercised with a signed-in user | ✅ | Sale, new customer, partial payment, return + refund, receipt, daily summary, cashier discount cap — E2E |
 
 ## Milestone 5 — Purchasing (current)
 
@@ -89,7 +100,7 @@ Legend: ✅ done & tested · 🟡 partial · ⬜ not started · ⛔ blocked (nee
 | Purchase history | ✅ | Orders list, receipts per order and per supplier |
 | Supplier returns (`supplier_return` movements) | ⬜ | Not implemented; use an approved stock adjustment meanwhile |
 | Supplier invoices / credit notes, payment allocation to orders | ⬜ | Out of MVP scope (ADR-015) |
-| Purchasing UI exercised with a signed-in user | ⛔ | Needs a running Supabase Auth |
+| Purchasing UI exercised with a signed-in user | ✅ | Order, place, partial receipt, over-receipt refused, supplier payment and balance — E2E |
 
 ## Milestone 6 — Reports, dashboard, mobile, PWA
 ⬜ documented metrics, timezone-correct date ranges, PWA manifest/installation, barcode scanning via camera (Permissions-Policy already allows `camera=(self)`).

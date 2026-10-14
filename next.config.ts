@@ -19,6 +19,8 @@ const nextConfig: NextConfig = {
   // page is per-tenant, per-user data; request-time rendering is simpler and
   // removes the risk of caching one tenant's data for another.
   cacheComponents: false,
+  // End-to-end tests build into their own folder so they never clash with `next dev`.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   poweredByHeader: false,
   experimental: {
     // CSV catalog import accepts files up to 2 MB (+ multipart overhead).

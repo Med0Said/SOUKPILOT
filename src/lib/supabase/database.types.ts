@@ -251,13 +251,25 @@ export type Database = {
           organization_id: string;
           status: "pending" | "committed";
           file_name: string;
-          products: Json;
-          summary: Json;
+          products: NonNullable<Json>;
+          summary: NonNullable<Json>;
           created_by: string | null;
           created_at: string;
           committed_by: string | null;
           committed_at: string | null;
         };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      document_sequences: {
+        Row: { organization_id: string; doc_type: string; next_value: number };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      stock_opening_costs: {
+        Row: { adjustment_id: string; organization_id: string; variant_id: string; unit_cost_millimes: number };
         Insert: never;
         Update: never;
         Relationships: [];
@@ -623,7 +635,7 @@ export type Database = {
           action: string;
           entity_type: string;
           entity_id: string | null;
-          details: Json;
+          details: NonNullable<Json>;
           created_at: string;
         };
         Insert: never;

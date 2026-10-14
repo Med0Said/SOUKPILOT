@@ -103,9 +103,15 @@ Two interchangeable backends (tests/db/harness.ts):
   `TEST_DATABASE_URL`), one fresh database per test file; required for
   **concurrency tests** (several connections), which are skipped on PGlite.
 *Why*: Docker (needed for `supabase start`) is not available on every developer machine.
-*Limits*: does not exercise GoTrue, PostgREST HTTP or hosted-Supabase-specific
-grants. Before the pilot, run the suite once against a real Supabase stack
-(local `supabase start` or a staging project) — tracked in the roadmap.
+*Limits of the shim*: it does not exercise GoTrue, PostgREST HTTP or
+Supabase-specific grants. **Closed in phase 0 (2026-10-14)**:
+- the same suite passes against Supabase's own PostgreSQL (`TEST_DATABASE_URL`
+  pointing at the local `supabase start` database, real API roles);
+- Playwright end-to-end tests (`e2e/`) run the real app against real GoTrue,
+  PostgREST and Mailpit, with a guard that fails on any browser error or CSP
+  violation;
+- the database types are generated from the real schema and checked against
+  the hand-written ones at compile time (`database.types.check.ts`).
 
 ### ADR-005 Money as integer millimes; quantities as integers (planned, M2–M4)
 *Decision*: all amounts `bigint` in millimes (1 TND = 1000 millimes). No

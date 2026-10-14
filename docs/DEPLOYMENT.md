@@ -61,7 +61,9 @@ Never run `supabase/seed.sql` in production.
 ## Production checklist
 
 - [ ] `npm run check` and `npm run build` pass on the release commit.
-- [ ] DB test suite passed (PGlite) **and** run once against staging.
+- [ ] DB test suite passed (PGlite) **and** against the target Supabase PostgreSQL (`TEST_DATABASE_URL`).
+- [ ] `npm run db:types` against the target schema, then `npm run typecheck` (type contract) passes.
+- [ ] `npm run test:e2e` passes against a stack running the release's migrations.
 - [ ] Migrations reviewed; `db push --dry-run` output checked.
 - [ ] Backups enabled and a restore tested (docs/BACKUP_AND_RESTORE.md).
 - [ ] Auth URLs, SMTP, templates configured; confirmations on.

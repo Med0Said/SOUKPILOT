@@ -697,6 +697,7 @@ export const fr = {
     loading: "Chargement…",
     unexpectedError: "Une erreur inattendue est survenue. Réessayez dans un instant.",
     notFound: "Page introuvable.",
+    notFoundHelp: "Cette page n'existe pas ou vous n'y avez pas accès.",
     backHome: "Retour à l'accueil",
     retry: "Réessayer",
   },
