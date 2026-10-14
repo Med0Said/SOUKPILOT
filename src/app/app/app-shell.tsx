@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import {
+  BarChart3,
   Building2,
   LayoutDashboard,
   LogOut,
@@ -24,7 +25,7 @@ import { SIDEBAR_COOKIE, type Theme } from "@/lib/ui/preferences";
 import { savePreference } from "@/lib/ui/browser-preferences";
 import { fr } from "@/i18n/fr";
 
-export type NavKey = "dashboard" | "sales" | "customers" | "catalog" | "stock" | "purchases" | "suppliers" | "settings";
+export type NavKey = "dashboard" | "sales" | "customers" | "catalog" | "stock" | "purchases" | "suppliers" | "reports" | "settings";
 
 export type NavItem = {
   key: NavKey;
@@ -47,6 +48,7 @@ const ICONS: Record<NavKey, LucideIcon> = {
   stock: Warehouse,
   purchases: Truck,
   suppliers: Building2,
+  reports: BarChart3,
   settings: Settings,
 };
 

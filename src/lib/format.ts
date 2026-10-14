@@ -48,3 +48,16 @@ export function formatIsoDateTime(iso: string, timeZone: string): string {
   );
   return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}`;
 }
+
+/**
+ * A calendar day "YYYY-MM-DD" (already local to the organization) for
+ * display: "10/03/2026", or "10/03" when short. No time-zone shift.
+ */
+export function formatCalendarDay(day: string, short = false): string {
+  return new Intl.DateTimeFormat("fr-TN", {
+    timeZone: "UTC",
+    day: "2-digit",
+    month: "2-digit",
+    ...(short ? {} : { year: "numeric" }),
+  }).format(new Date(`${day.slice(0, 10)}T12:00:00Z`));
+}

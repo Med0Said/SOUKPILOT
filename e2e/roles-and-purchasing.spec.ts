@@ -76,6 +76,17 @@ test("the cashier accepts the invitation and gets cashier rights only", async ({
   await expect(page.locator("dl").getByText("Total", { exact: true }).locator("..")).toContainText(/18,000\s*DT/);
   // Returns are owner/manager only: no return form for a cashier.
   await expect(page.getByRole("heading", { name: "Retour d'articles" })).toHaveCount(0);
+
+  // Reports carry costs and margins: no link, a refusal, and a 403 on export.
+  // The cashier's dashboard shows today's figures but no margin or 7-day chart.
+  await page.goto("/app");
+  await expect(page.getByRole("region", { name: /Aujourd'hui/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "7 derniers jours" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "À traiter" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Rapports" })).toHaveCount(0);
+  await page.goto("/app/reports");
+  await expect(page.getByText("Les rapports sont réservés au propriétaire et aux gérants.")).toBeVisible();
+  expect((await page.request.get("/app/reports/export?kind=products")).status()).toBe(403);
 });
 
 test("on a phone, the cashier gets the bottom navigation", async ({ browser, baseURL }) => {

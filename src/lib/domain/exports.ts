@@ -229,3 +229,85 @@ export function purchaseOrdersExportRows(
 export function exportFileName(base: string, day: string): string {
   return `${base}-${day}.csv`;
 }
+
+// ---------------------------------------------------------------------------
+// Reports
+// ---------------------------------------------------------------------------
+export type ExportReportDay = {
+  day: string;
+  sales_count: number;
+  sales_total_millimes: number;
+  returns_millimes: number;
+  net_sales_millimes: number;
+  credit_given_millimes: number;
+  cost_millimes: number;
+  margin_millimes: number;
+  revenue_without_cost_millimes: number;
+};
+
+export function reportDaysExportRows(rows: readonly ExportReportDay[]): CsvTable {
+  return [
+    [
+      "Jour",
+      "Ventes",
+      "Total ventes (DT)",
+      "Retours (DT)",
+      "Ventes nettes (DT)",
+      "Crédit accordé (DT)",
+      "Coût des ventes (DT)",
+      "Marge estimée (DT)",
+      "Ventes sans coût connu (DT)",
+    ],
+    ...rows.map((r) => [
+      r.day.slice(0, 10),
+      r.sales_count,
+      money(r.sales_total_millimes),
+      money(r.returns_millimes),
+      money(r.net_sales_millimes),
+      money(r.credit_given_millimes),
+      money(r.cost_millimes),
+      money(r.margin_millimes),
+      money(r.revenue_without_cost_millimes),
+    ]),
+  ];
+}
+
+export type ExportReportGroup = {
+  label: string | null;
+  category_name: string | null;
+  quantity: number;
+  revenue_millimes: number;
+  cost_millimes: number;
+  margin_millimes: number;
+  revenue_without_cost_millimes: number;
+};
+
+export function reportGroupsExportRows(rows: readonly ExportReportGroup[], group: "product" | "category", noCategory: string): CsvTable {
+  return [
+    [
+      ...(group === "product" ? ["Article", "Catégorie"] : ["Catégorie"]),
+      "Quantité nette",
+      "CA net (DT)",
+      "Coût (DT)",
+      "Marge estimée (DT)",
+      "CA sans coût connu (DT)",
+    ],
+    ...rows.map((r) => [
+      ...(group === "product" ? [r.label ?? "", r.category_name ?? noCategory] : [r.label ?? noCategory]),
+      r.quantity,
+      money(r.revenue_millimes),
+      money(r.cost_millimes),
+      money(r.margin_millimes),
+      money(r.revenue_without_cost_millimes),
+    ]),
+  ];
+}
+
+export type ExportReportPayment = { label: string; received_millimes: number; refunded_millimes: number; net_millimes: number };
+
+export function reportPaymentsExportRows(rows: readonly ExportReportPayment[]): CsvTable {
+  return [
+    ["Mode", "Reçu (DT)", "Remboursé (DT)", "Net (DT)"],
+    ...rows.map((r) => [r.label, money(r.received_millimes), money(r.refunded_millimes), money(r.net_millimes)]),
+  ];
+}

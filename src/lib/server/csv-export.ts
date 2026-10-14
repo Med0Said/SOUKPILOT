@@ -44,16 +44,17 @@ export async function collectPages<T>(
 
 /**
  * UTF-8 with BOM and ";" separator: Excel and LibreOffice in French locales
- * open it with accents and columns intact.
+ * open it with accents and columns intact. `fileBase` gets today's date
+ * appended unless `dated` is false (a report file already names its period).
  */
-export function csvResponse(context: OrgContext, kind: string, fileBase: string, table: CsvTable): NextResponse {
+export function csvResponse(context: OrgContext, kind: string, fileBase: string, table: CsvTable, dated = true): NextResponse {
   logger.info("export.csv", {
     organizationId: context.membership.organizationId,
     userId: context.user.id,
     kind,
     rows: table.length - 1,
   });
-  const fileName = exportFileName(fileBase, todayIn(context.membership.timezone));
+  const fileName = dated ? exportFileName(fileBase, todayIn(context.membership.timezone)) : `${fileBase}.csv`;
   return new NextResponse("﻿" + toCsv(table, ";") + "\r\n", {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",

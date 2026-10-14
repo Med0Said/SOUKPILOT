@@ -30,7 +30,9 @@ test("capture key screens", async ({ page, browser, baseURL }) => {
   }
   await page.goto("/app/stock/opening");
   await pickVariant(page, "Robe", /Robe d'été lin/);
-  await page.getByLabel("Quantité").fill("2");
+  await pickVariant(page, "Foulard", /Foulard soie/);
+  await page.getByLabel("Quantité").nth(0).fill("2");
+  await page.getByLabel("Quantité").nth(1).fill("6");
   await clickAndConfirm(page, page.getByRole("button", { name: "Enregistrer le stock initial" }));
 
   await page.setViewportSize({ width: 1366, height: 860 });
@@ -50,6 +52,12 @@ test("capture key screens", async ({ page, browser, baseURL }) => {
   await page.waitForTimeout(400); // let the 140 ms entry animation finish
   await page.screenshot({ path: `${dir}/06-confirm-dialog-dark.png` });
   await page.getByRole("button", { name: "Annuler" }).click();
+  await clickAndConfirm(page, page.getByRole("button", { name: "Valider la vente" }));
+  await expect(page.getByText("Vente enregistrée.")).toBeVisible();
+  await page.goto("/app/reports?period=30d");
+  await page.screenshot({ path: `${dir}/10-reports-dark.png`, fullPage: true });
+  await page.goto("/app");
+  await page.screenshot({ path: `${dir}/11-dashboard-dark.png`, fullPage: true });
 
   await page.locator("aside").getByRole("button", { name: "Réduire le menu" }).click();
   await page.getByRole("radio", { name: "Clair" }).count();

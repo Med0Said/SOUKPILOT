@@ -5,6 +5,29 @@ take priority over the schedule. Last updated 2026-10-14.
 
 Legend: ✅ done & tested · 🟡 partial · ⬜ not started · ⛔ blocked (needs something outside the repo)
 
+## Modernization phase 3 — Reports, dashboards, PWA (Milestone 6, 2026-10-14)
+
+| Item | Status | Notes |
+| --- | --- | --- |
+| Report functions with documented formulas (sales by day, by article, by category, payments) | ✅ | docs/REPORTS.md; per-day figures = daily summary (DB test); mutation-checked |
+| Estimated margin on known costs, unknown costs reported separately | ✅ | DB + E2E |
+| Organization time zone respected (days, periods) | ✅ | DB tests run in UTC |
+| Rapports page: periods, comparison with previous period, SVG chart, top articles, categories, payments, CSV exports | ✅ | E2E (incl. CSV content) |
+| Dashboards per role (owner/manager: 7 days + "À traiter"; cashier: today, drafts, low stock) | ✅ | E2E for both roles |
+| Reports refused to cashiers (page, export, SQL) | ✅ | DB + E2E |
+| Installable PWA (manifest, icons, shortcuts) | ✅ | No service worker / offline mode, by design |
+| Reports by location, by cashier; stock reports beyond valuation | ⬜ | Next |
+| Barcode scanning via camera | ⬜ | Still planned (Milestone 6 remainder) |
+
+## Modernization phase 2 — Productivity (in progress)
+
+| Item | Status | Notes |
+| --- | --- | --- |
+| Accent-insensitive search (`unaccent`), incl. cart and stock pickers | ✅ | Migration `20261018090000_search.sql`, DB tests |
+| Sortable / filterable list functions (articles, stock, customers, sales) and global search function | ✅ | DB tests (RLS: cashier never sees suppliers or orders) |
+| CSV export building blocks (formula guard, numeric cells, catalog export = import template) | ✅ | Unit tests (round-trip through the importer) |
+| Screens: Ctrl/Cmd+K palette, pagination/sort/saved views on lists, export buttons | ⬜ | Not wired yet |
+
 ## Modernization phase 1 — UI foundation (2026-10-14)
 
 | Item | Status | Notes |
@@ -118,7 +141,7 @@ Legend: ✅ done & tested · 🟡 partial · ⬜ not started · ⛔ blocked (nee
 | Purchasing UI exercised with a signed-in user | ✅ | Order, place, partial receipt, over-receipt refused, supplier payment and balance — E2E |
 
 ## Milestone 6 — Reports, dashboard, mobile, PWA
-⬜ documented metrics, timezone-correct date ranges, PWA manifest/installation, barcode scanning via camera (Permissions-Policy already allows `camera=(self)`).
+🟡 Documented metrics, timezone-correct ranges, role dashboards and PWA installation done (see phase 3 above). Remaining: barcode scanning via camera (Permissions-Policy already allows `camera=(self)`), reports by location/cashier.
 
 ## Milestone 7 — Subscriptions, security review, backups
 ⬜ subscription metadata + manual activation, server-side plan limits (incl. number of locations), payment-provider abstraction, security review, **restore drill**.

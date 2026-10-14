@@ -250,6 +250,35 @@ suppliers ──┬── purchase_orders (draft → ordered → partially_recei
 | `supplier_balances(org)` | purchases, paid, balance per supplier |
 | `check_purchasing_consistency(org)` | received quantities, receipt totals, order totals and statuses vs. details — must be empty |
 
+## 2f. Search and lists (implemented, phase 2 — `20261018090000_search.sql`)
+
+Extension `unaccent`; `private.search_key(text)` = lower case without accents
+(IMMUTABLE, indexed with trigram GIN on products, customers and suppliers
+names). All functions below are SECURITY INVOKER (RLS applies).
+
+| Function | Purpose |
+| --- | --- |
+| `search_products(org, q, category, include_inactive, limit, offset, sort)` | + accent-insensitive names; sort `name`, `name_desc`, `price_asc`, `price_desc`, `recent` |
+| `search_variants(org, q, location, limit)` | accent-insensitive (cart, stock forms) |
+| `stock_overview(org, location, q, low_only, limit, offset, sort)` | + sort `name`, `quantity_asc`, `quantity_desc` |
+| `search_customers(org, q, due_only, sort, limit, offset)` | name (no accents) or phone; balance = Σ (total − returned − paid) of finalized sales |
+| `search_sales(org, status, from, to, customer, due_only, q, sort, limit, offset)` | local-day range in the organization's time zone; q = number or customer name |
+| `global_search(org, q, limit_per_kind)` | command palette: products, customers, suppliers, sales and purchase orders by number |
+
+## 2g. Reports (implemented, phase 3 / Milestone 6 — `20261019090000_reports.sql`)
+
+Read-only, SECURITY DEFINER with an owner/manager check (they read costs).
+Definitions: docs/REPORTS.md.
+
+| Function | Purpose |
+| --- | --- |
+| `report_sales_by_day(org, from, to, location?)` | one row per local day: sales, returns, net, credit, cost, estimated margin, revenue without cost |
+| `report_sales_by_product(org, from, to, group, sort, limit)` | by product or category (`group`), sorted by revenue, quantity or margin |
+| `report_payments_by_method(org, from, to)` | received, refunded, net per method |
+| `dashboard_attention(org)` | pending adjustments, submitted counts, late purchase orders, customers owing |
+
+Periods are validated by `private.require_report_period` (from ≤ to, ≤ 367 days).
+
 ## 3. Tenant isolation strategy
 
 1. RLS on every table; policies reference only `auth.uid()` through

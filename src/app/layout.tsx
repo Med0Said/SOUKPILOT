@@ -16,6 +16,7 @@ export const metadata: Metadata = {
   title: { default: fr.app.name, template: `%s · ${fr.app.name}` },
   description: fr.app.tagline,
   robots: { index: false, follow: false },
+  appleWebApp: { capable: true, title: fr.app.name, statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

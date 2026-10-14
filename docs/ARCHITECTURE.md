@@ -220,6 +220,34 @@ returns and payment allocation to specific orders are not modelled yet.
 *Guard*: every E2E test fails on a console error or CSP violation.
 See docs/BRAND.md for tokens and rules.
 
+### ADR-017 Accent-insensitive search in SQL (phase 2)
+*Decision*: `unaccent` extension wrapped in an IMMUTABLE `private.search_key`
+(dictionary named explicitly, so it is safe to index), with trigram
+expression indexes on product, customer and supplier names. All search and
+list functions stay SECURITY INVOKER, so RLS keeps deciding what a caller
+sees (a cashier's global search never returns suppliers or purchase orders).
+List filters live in the URL and are parsed once (`src/lib/ui/list-filters.ts`)
+for both the page and its CSV export, so an export is exactly the filtered
+list. CSV exports reuse the import's writer (formula guard), with numeric
+cells for amounts; the catalog export uses the import template's columns.
+
+### ADR-018 Reports: read-only SQL, documented formulas, own SVG charts (phase 3)
+*Decisions*:
+- Report figures are computed in SQL functions with the same day/period rules
+  as the daily summary, asserted equal by a database test; formulas are in
+  docs/REPORTS.md.
+- Margin uses the cost snapshotted at sale time; unknown costs are excluded
+  and reported separately rather than counted as zero cost.
+- Reports are owner/manager only (they read costs): SECURITY DEFINER + role
+  check, organization filter in every query.
+- Charts are hand-written SVG; the `<svg>` element is rendered by a client
+  component because React's streaming can split server-rendered SVG with an
+  inline-styled placeholder, which the CSP blocks.
+- Installable PWA without a service worker (no offline mode: stale stock and
+  offline sales would be unsafe).
+- Database tests run with the session time zone set to UTC, like production
+  servers; a developer PC set to Tunisia hid a time-zone bug in a mutation test.
+
 ### ADR-009 French-first, RTL-ready
 Strings live in `src/i18n/fr.ts`; layout uses logical properties
 (`ms-`, `pe-`, `border-e`, `text-start`) so Arabic can be enabled by switching

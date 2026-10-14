@@ -40,9 +40,16 @@ export const usingRealPostgres = Boolean(process.env.TEST_DATABASE_URL);
 // int8 (bigint) as JS number on both backends. Millime amounts stay far below 2^53.
 const INT8_OID = 20;
 pg.types.setTypeParser(INT8_OID, (value) => Number(value));
+// date as "YYYY-MM-DD" text, like PostgREST (a JS Date would shift the day
+// with the machine's time zone).
+const DATE_OID = 1082;
+pg.types.setTypeParser(DATE_OID, (value) => value);
 
 async function createPgliteDb(): Promise<TestDb> {
-  const db = new PGlite({ extensions: { pg_trgm, unaccent }, parsers: { [INT8_OID]: (v: string) => Number(v) } });
+  const db = new PGlite({ extensions: { pg_trgm, unaccent }, parsers: { [INT8_OID]: (v: string) => Number(v), [DATE_OID]: (v: string) => v } });
+  // Servers run in UTC; without this the session follows the machine's zone,
+  // which hides time-zone bugs on a developer PC set to Tunisia.
+  await db.exec("set timezone to 'UTC'");
   return {
     kind: "pglite",
     query: (sql, params) => db.query(sql, params),
@@ -67,7 +74,7 @@ async function createPostgresDb(adminUrl: string): Promise<TestDb> {
 
   const url = new URL(adminUrl);
   url.pathname = `/${name}`;
-  const pool = new pg.Pool({ connectionString: url.toString(), max: 10 });
+  const pool = new pg.Pool({ connectionString: url.toString(), max: 10, options: "-c timezone=UTC" });
 
   const wrap = (client: pg.Pool | pg.PoolClient): Queryable => ({
     query: async (sql, params) => ({ rows: (await client.query(sql, params)).rows }),

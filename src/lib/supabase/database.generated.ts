@@ -932,6 +932,9 @@ isOneToOne: false
               "balance_millimes": number,"customer_id": string,"customer_name": string,"sales_count": number
             }[]
                            },
+"dashboard_attention":
+{ Args: { "p_organization_id": string }; Returns: Json
+                           },
 "finalize_sale":
 { Args: { "p_customer_id": string,"p_idempotency_key": string,"p_lines": Json,"p_location_id": string,"p_note": string,"p_order_discount_millimes": number,"p_organization_id": string,"p_payments": Json,"p_sale_id": string }; Returns: string
                            },
@@ -989,6 +992,21 @@ isOneToOne: false
                            },
 "remove_member":
 { Args: { "p_organization_id": string,"p_user_id": string }; Returns: undefined
+                           },
+"report_payments_by_method":
+{ Args: { "p_from": string,"p_organization_id": string,"p_to": string }; Returns: {
+              "kind": string,"label": string,"method_id": string,"net_millimes": number,"received_millimes": number,"refunded_millimes": number
+            }[]
+                           },
+"report_sales_by_day":
+{ Args: { "p_from": string,"p_location_id"?: string,"p_organization_id": string,"p_to": string }; Returns: {
+              "cost_millimes": number,"credit_given_millimes": number,"day": string,"discount_millimes": number,"gross_millimes": number,"margin_millimes": number,"net_sales_millimes": number,"returns_count": number,"returns_millimes": number,"revenue_without_cost_millimes": number,"sales_count": number,"sales_total_millimes": number
+            }[]
+                           },
+"report_sales_by_product":
+{ Args: { "p_from": string,"p_group"?: string,"p_limit"?: number,"p_organization_id": string,"p_sort"?: string,"p_to": string }; Returns: {
+              "category_name": string,"cost_millimes": number,"group_id": string,"label": string,"margin_millimes": number,"quantity": number,"revenue_millimes": number,"revenue_without_cost_millimes": number,"total_count": number
+            }[]
                            },
 "respond_to_invitation":
 { Args: { "p_accept": boolean,"p_invitation_id": string }; Returns: string

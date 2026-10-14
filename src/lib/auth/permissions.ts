@@ -39,6 +39,8 @@ export const PERMISSIONS = {
   "paymentMethods.manage": ["owner", "manager"],
   /** Purchase orders, receipts against orders, supplier payments and balances. */
   "purchasing.manage": ["owner", "manager"],
+  /** Reports and dashboard figures with costs and margins (report_* SQL functions). */
+  "reports.view": ["owner", "manager"],
 } as const satisfies Record<string, readonly OrgRole[]>;
 
 export type Permission = keyof typeof PERMISSIONS;

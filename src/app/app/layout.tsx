@@ -37,6 +37,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     { items: [{ key: "dashboard", href: "/app", label: fr.nav.dashboard, exact: true }] },
     { title: fr.nav.groupSell, items: sell },
     { title: fr.nav.groupGoods, items: goods },
+    ...(can(role, "reports.view")
+      ? [{ title: fr.nav.groupPilot, items: [{ key: "reports", href: "/app/reports", label: fr.nav.reports, desktopOnly: true } satisfies NavItem] }]
+      : []),
     { items: [{ key: "settings", href: "/app/settings", label: fr.nav.settings, also: ["/app/profile"] }] },
   ];
 

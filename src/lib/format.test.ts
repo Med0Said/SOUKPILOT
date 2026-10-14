@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDateTime, formatIsoDate, formatIsoDateTime } from "./format";
+import { formatCalendarDay, formatDateTime, formatIsoDate, formatIsoDateTime } from "./format";
 
 describe("date formatting in the organization's time zone", () => {
   const lateEvening = "2026-03-10T23:30:00Z"; // 00:30 on the 11th in Tunis
@@ -13,5 +13,12 @@ describe("date formatting in the organization's time zone", () => {
     expect(formatIsoDate(lateEvening, "Africa/Tunis")).toBe("2026-03-11");
     expect(formatIsoDateTime(lateEvening, "Africa/Tunis")).toBe("2026-03-11 00:30");
     expect(formatIsoDateTime(lateEvening, "UTC")).toBe("2026-03-10 23:30");
+  });
+});
+
+describe("formatCalendarDay", () => {
+  it("never shifts the day", () => {
+    expect(formatCalendarDay("2026-03-01")).toBe("01/03/2026");
+    expect(formatCalendarDay("2026-03-01", true)).toBe("01/03");
   });
 });

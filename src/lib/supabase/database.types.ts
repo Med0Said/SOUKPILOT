@@ -957,6 +957,59 @@ export type Database = {
           total_count: number;
         }[];
       };
+      report_sales_by_day: {
+        Args: { p_organization_id: string; p_from: string; p_to: string; p_location_id?: string | null };
+        Returns: {
+          day: string;
+          sales_count: number;
+          gross_millimes: number;
+          discount_millimes: number;
+          sales_total_millimes: number;
+          returns_count: number;
+          returns_millimes: number;
+          net_sales_millimes: number;
+          credit_given_millimes: number;
+          cost_millimes: number;
+          margin_millimes: number;
+          revenue_without_cost_millimes: number;
+        }[];
+      };
+      report_sales_by_product: {
+        Args: {
+          p_organization_id: string;
+          p_from: string;
+          p_to: string;
+          p_group?: "product" | "category";
+          p_sort?: "revenue" | "quantity" | "margin";
+          p_limit?: number;
+        };
+        Returns: {
+          group_id: string | null;
+          label: string | null;
+          category_name: string | null;
+          quantity: number;
+          revenue_millimes: number;
+          cost_millimes: number;
+          margin_millimes: number;
+          revenue_without_cost_millimes: number;
+          total_count: number;
+        }[];
+      };
+      report_payments_by_method: {
+        Args: { p_organization_id: string; p_from: string; p_to: string };
+        Returns: {
+          method_id: string;
+          label: string;
+          kind: string;
+          received_millimes: number;
+          refunded_millimes: number;
+          net_millimes: number;
+        }[];
+      };
+      dashboard_attention: {
+        Args: { p_organization_id: string };
+        Returns: Json;
+      };
       global_search: {
         Args: { p_organization_id: string; p_query: string; p_limit_per_kind?: number };
         Returns: {

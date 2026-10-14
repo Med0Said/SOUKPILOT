@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { requireOrgContext } from "@/lib/auth/organization";
+import { hasPermission, requireOrgContext } from "@/lib/auth/organization";
 import { PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 
 export const metadata: Metadata = { title: fr.nav.settings };
 
 export default async function SettingsPage() {
-  await requireOrgContext();
+  const context = await requireOrgContext();
   const t = fr.settingsHub;
   const sections = [
+    ...(hasPermission(context, "reports.view") ? [{ href: "/app/reports", title: fr.nav.reports, body: t.reports }] : []),
     { href: "/app/settings/organization", title: fr.nav.organization, body: t.organization },
     { href: "/app/settings/locations", title: fr.nav.locations, body: t.locations },
     { href: "/app/settings/members", title: fr.nav.members, body: t.members },
