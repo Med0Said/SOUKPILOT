@@ -32,6 +32,14 @@ describe("UI permission matrix (mirrors database rules)", () => {
     expect(can("manager", "stock.adjust.review")).toBe(true);
   });
 
+  it("cashiers sell and collect payments but cannot process returns or see margins", () => {
+    expect(can("cashier", "sales.sell")).toBe(true);
+    expect(can("cashier", "sales.return")).toBe(false);
+    expect(can("cashier", "sales.viewMargin")).toBe(false);
+    expect(can("cashier", "paymentMethods.manage")).toBe(false);
+    expect(can("manager", "sales.return")).toBe(true);
+  });
+
   it("invitable roles never include owner", () => {
     expect(invitableRoles("owner")).toEqual(["manager", "cashier"]);
     expect(invitableRoles("manager")).toEqual(["cashier"]);

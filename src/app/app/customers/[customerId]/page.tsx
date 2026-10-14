@@ -1,0 +1,96 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { hasPermission, requireOrgContext } from "@/lib/auth/organization";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { formatTnd } from "@/lib/domain/money";
+import { balanceDue } from "@/lib/domain/pricing";
+import { formatDateTime } from "@/lib/format";
+import { Badge, Card, EmptyState, PageHeader } from "@/components/ui/layout";
+import { fr } from "@/i18n/fr";
+import { CustomerForm } from "../customer-form";
+
+export const metadata: Metadata = { title: fr.nav.customers };
+
+export default async function CustomerPage({ params }: { params: Promise<{ customerId: string }> }) {
+  const { customerId } = await params;
+  if (!/^[0-9a-f-]{36}$/i.test(customerId)) notFound();
+  const context = await requireOrgContext();
+  const orgId = context.membership.organizationId;
+  const t = fr.customers;
+  const supabase = await createSupabaseServerClient();
+
+  const { data: customer } = await supabase
+    .from("customers")
+    .select("id, name, phone, address, notes, is_active")
+    .eq("id", customerId)
+    .eq("organization_id", orgId)
+    .maybeSingle();
+  if (!customer) notFound();
+
+  const { data: sales } = await supabase
+    .from("sales")
+    .select("id, number, finalized_at, total_millimes, returned_millimes, paid_millimes")
+    .eq("organization_id", orgId)
+    .eq("customer_id", customerId)
+    .eq("status", "finalized")
+    .order("number", { ascending: false })
+    .limit(200);
+  const balance = (sales ?? []).reduce(
+    (s, x) => s + balanceDue({ totalMillimes: x.total_millimes, returnedMillimes: x.returned_millimes, paidMillimes: x.paid_millimes }),
+    0,
+  );
+
+  return (
+    <>
+      <Link href="/app/customers" className="mb-3 inline-block text-sm text-primary underline-offset-4 hover:underline">
+        ← {fr.nav.customers}
+      </Link>
+      <PageHeader
+        title={customer.name}
+        subtitle={customer.phone ?? undefined}
+        actions={balance !== 0 ? <Badge tone={balance > 0 ? "warning" : "neutral"}>{balance > 0 ? t.owes(formatTnd(balance)) : t.credit(formatTnd(-balance))}</Badge> : null}
+      />
+      <div className="space-y-4">
+        <Card>
+          <h2 className="mb-2 font-semibold">{t.history}</h2>
+          {(sales ?? []).length === 0 ? <EmptyState title={t.noSales} /> : null}
+          <ul className="divide-y divide-border">
+            {(sales ?? []).map((s) => {
+              const due = balanceDue({ totalMillimes: s.total_millimes, returnedMillimes: s.returned_millimes, paidMillimes: s.paid_millimes });
+              return (
+                <li key={s.id}>
+                  <Link href={`/app/sales/${s.id}`} className="flex justify-between gap-3 py-2 text-sm hover:underline">
+                    <span>
+                      {fr.sales.number(s.number as number)} · {formatDateTime(s.finalized_at as string, context.membership.timezone)}
+                    </span>
+                    <span className="tabular-nums">
+                      {formatTnd(s.total_millimes)}
+                      {due > 0 ? <span className="text-danger"> ({t.owes(formatTnd(due))})</span> : null}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </Card>
+        {hasPermission(context, "customers.manage") ? (
+          <Card>
+            <h2 className="mb-3 font-semibold">{t.edit}</h2>
+            <CustomerForm
+              organizationId={orgId}
+              customer={{
+                id: customer.id,
+                name: customer.name,
+                phone: customer.phone ?? "",
+                address: customer.address ?? "",
+                notes: customer.notes ?? "",
+                isActive: customer.is_active,
+              }}
+            />
+          </Card>
+        ) : null}
+      </div>
+    </>
+  );
+}

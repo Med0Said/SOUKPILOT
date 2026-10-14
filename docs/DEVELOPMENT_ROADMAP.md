@@ -1,7 +1,7 @@
 # SoukPilot — Development Roadmap & Status
 
 Planning estimate, not a guarantee. Security and financial-integrity defects
-take priority over the schedule. Last updated 2026-10-15.
+take priority over the schedule. Last updated 2026-10-14.
 
 Legend: ✅ done & tested · 🟡 partial · ⬜ not started · ⛔ blocked (needs something outside the repo)
 
@@ -39,7 +39,7 @@ Legend: ✅ done & tested · 🟡 partial · ⬜ not started · ⛔ blocked (nee
 | Import updates of existing products | ⬜ | Import only creates; updating via CSV needs an explicit, reviewed "update mode" |
 | UI exercised end-to-end with a signed-in user | ⛔ | Same blocker as M1 auth |
 
-## Milestone 3 — Inventory (current)
+## Milestone 3 — Inventory
 
 | Item | Status | Notes |
 | --- | --- | --- |
@@ -58,8 +58,24 @@ Legend: ✅ done & tested · 🟡 partial · ⬜ not started · ⛔ blocked (nee
 | Negative-stock override setting | ⬜ | Not offered (spec: no negative stock by default) |
 | Stock UI exercised with a signed-in user | ⛔ | Same blocker as M1/M2 (needs Supabase Auth) |
 
-## Milestone 4 — Sales
-⬜ draft sales, server-side totals/discounts, idempotent finalize, payments (partial), returns/cancellations as reversal documents, printable internal receipt, payment methods, document numbering, cost snapshot per sale item (costs table ready).
+## Milestone 4 — Sales (current)
+
+| Item | Status | Notes |
+| --- | --- | --- |
+| Cart with server-side pricing, line % discounts and total discount | ✅ | TS preview = SQL result (parity test) |
+| Cashier discount limit (organization setting) | ✅ | Enforced in SQL |
+| Idempotent one-transaction finalization (stock, payments, cost snapshot, audit) | ✅ | Concurrency + mutation tested |
+| Drafts (save, resume, cancel) | ✅ | |
+| Configurable payment methods (defaults + D17-style mobile) | ✅ | |
+| Partial payments / credit to a customer, later payments | ✅ | Overpayment refused; concurrent double payment refused |
+| Returns with optional restock and refund, later refunds | ✅ | Cumulative rounding; owner/manager |
+| Printable internal receipt | ✅ | "Reçu interne — ne vaut pas facture" |
+| Daily summary (sales, returns, payments by method, credit) | ✅ | Organization timezone |
+| Customers with history and balances | ✅ | Minimal personal data |
+| Estimated gross margin per sale (owner/manager) | ✅ | Reports across sales come in M6 |
+| Cash session (opening float, expected vs counted cash) | ⬜ | Planned with Module G (cash & expenses) |
+| Fiscal invoice / VAT | ⬜ | Not planned before verified Tunisian rules and local review |
+| Sales UI exercised with a signed-in user | ⛔ | Needs a running Supabase Auth |
 
 ## Milestone 5 — Purchasing
 ⬜ purchase orders, idempotent goods receipts, supplier payments and balances (suppliers table exists).

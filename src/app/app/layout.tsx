@@ -9,11 +9,17 @@ import { NavLinks, type NavItem } from "./nav-links";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const { membership, memberships } = await requireOrgContext();
+  // The phone's bottom bar shows the five daily workflows; the rest is
+  // reachable from the desktop sidebar and from Paramètres.
   const navItems: NavItem[] = [
     { href: "/app", label: fr.nav.dashboard, exact: true },
+    { href: "/app/sales", label: fr.nav.sales },
+    { href: "/app/customers", label: fr.nav.customers, desktopOnly: true },
     { href: "/app/catalog", label: fr.nav.catalog },
     { href: "/app/stock", label: fr.nav.stock },
-    ...(can(membership.role, "suppliers.manage") ? [{ href: "/app/suppliers", label: fr.nav.suppliers }] : []),
+    ...(can(membership.role, "suppliers.manage")
+      ? [{ href: "/app/suppliers", label: fr.nav.suppliers, desktopOnly: true }]
+      : []),
     { href: "/app/settings", label: fr.nav.settings, also: ["/app/profile"] },
   ];
 
@@ -61,7 +67,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           aria-label={fr.nav.mainNavigation}
           className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
         >
-          <NavLinks items={navItems} orientation="horizontal" />
+          <NavLinks items={navItems.filter((i) => !i.desktopOnly)} orientation="horizontal" />
         </nav>
       </div>
     </div>

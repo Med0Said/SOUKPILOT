@@ -17,6 +17,7 @@ export function SubmitButton({
   confirmMessage,
   name,
   value,
+  formAction,
 }: {
   children: ReactNode;
   pendingLabel?: string;
@@ -26,6 +27,8 @@ export function SubmitButton({
   confirmMessage?: string;
   name?: string;
   value?: string;
+  /** Alternative action for this button (one form, several submit actions). */
+  formAction?: (formData: FormData) => void;
 }) {
   const { pending } = useFormStatus();
   return (
@@ -37,6 +40,7 @@ export function SubmitButton({
       aria-disabled={pending}
       name={name}
       value={value}
+      formAction={formAction}
       onClick={(event) => {
         if (confirmMessage && !window.confirm(confirmMessage)) event.preventDefault();
       }}

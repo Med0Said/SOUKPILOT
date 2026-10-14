@@ -10,6 +10,8 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type OrgRole = "owner" | "manager" | "cashier";
 export type InvitationStatus = "pending" | "accepted" | "declined" | "revoked";
 export type LocaleCode = "fr" | "ar";
+export type PaymentMethodKind = "cash" | "card" | "transfer" | "check" | "mobile" | "other";
+export type SaleStatus = "draft" | "finalized" | "cancelled";
 export type StockMovementType =
   | "opening"
   | "purchase_receipt"
@@ -33,6 +35,7 @@ export type Database = {
           currency_code: string;
           timezone: string;
           default_locale: LocaleCode;
+          cashier_max_discount_bps: number;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -42,6 +45,7 @@ export type Database = {
           name?: string;
           timezone?: string;
           default_locale?: LocaleCode;
+          cashier_max_discount_bps?: number;
         };
         Relationships: [];
       };
@@ -388,6 +392,151 @@ export type Database = {
         Update: never;
         Relationships: [];
       };
+      payment_methods: {
+        Row: {
+          id: string;
+          organization_id: string;
+          label: string;
+          kind: PaymentMethodKind;
+          is_active: boolean;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: { organization_id: string; label: string; kind: PaymentMethodKind; sort_order?: number; is_active?: boolean };
+        Update: { label?: string; kind?: PaymentMethodKind; sort_order?: number; is_active?: boolean };
+        Relationships: [];
+      };
+      customers: {
+        Row: {
+          id: string;
+          organization_id: string;
+          name: string;
+          phone: string | null;
+          address: string | null;
+          notes: string | null;
+          is_active: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: { organization_id: string; name: string; phone?: string | null; address?: string | null; notes?: string | null };
+        Update: { name?: string; phone?: string | null; address?: string | null; notes?: string | null; is_active?: boolean };
+        Relationships: [];
+      };
+      sales: {
+        Row: {
+          id: string;
+          organization_id: string;
+          location_id: string;
+          number: number | null;
+          status: SaleStatus;
+          customer_id: string | null;
+          note: string | null;
+          subtotal_millimes: number;
+          line_discount_millimes: number;
+          order_discount_millimes: number;
+          total_millimes: number;
+          returned_millimes: number;
+          paid_millimes: number;
+          finalize_idempotency_key: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          finalized_by: string | null;
+          finalized_at: string | null;
+          cancelled_by: string | null;
+          cancelled_at: string | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [
+          {
+            foreignKeyName: "sales_organization_id_customer_id_fkey";
+            columns: ["organization_id", "customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      sale_items: {
+        Row: {
+          id: string;
+          organization_id: string;
+          sale_id: string;
+          line_no: number;
+          variant_id: string;
+          product_name: string;
+          variant_label: string;
+          track_stock: boolean;
+          quantity: number;
+          unit_price_millimes: number;
+          discount_bps: number;
+          gross_millimes: number;
+          line_discount_millimes: number;
+          line_total_millimes: number;
+          order_discount_share_millimes: number;
+          net_total_millimes: number;
+          returned_quantity: number;
+          returned_millimes: number;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      sale_item_costs: {
+        Row: { sale_item_id: string; organization_id: string; unit_cost_millimes: number | null };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      sale_payments: {
+        Row: {
+          id: string;
+          organization_id: string;
+          sale_id: string;
+          method_id: string;
+          kind: "payment" | "refund";
+          amount_millimes: number;
+          idempotency_key: string | null;
+          return_id: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      sale_returns: {
+        Row: {
+          id: string;
+          organization_id: string;
+          sale_id: string;
+          number: number;
+          reason: string;
+          amount_millimes: number;
+          idempotency_key: string;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      sale_return_items: {
+        Row: {
+          return_id: string;
+          organization_id: string;
+          sale_item_id: string;
+          quantity: number;
+          restock: boolean;
+          amount_millimes: number;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       audit_logs: {
         Row: {
           id: string;
@@ -614,11 +763,70 @@ export type Database = {
           last_quantity_after: number | null;
         }[];
       };
+      save_sale_draft: {
+        Args: {
+          p_organization_id: string;
+          p_sale_id: string | null;
+          p_location_id: string;
+          p_customer_id: string | null;
+          p_lines: Json;
+          p_order_discount_millimes: number;
+          p_note: string | null;
+        };
+        Returns: string;
+      };
+      cancel_sale_draft: { Args: { p_sale_id: string }; Returns: undefined };
+      finalize_sale: {
+        Args: {
+          p_organization_id: string;
+          p_sale_id: string | null;
+          p_location_id: string;
+          p_customer_id: string | null;
+          p_lines: Json;
+          p_order_discount_millimes: number;
+          p_note: string | null;
+          p_payments: Json;
+          p_idempotency_key: string;
+        };
+        Returns: string;
+      };
+      record_sale_payment: {
+        Args: { p_sale_id: string; p_method_id: string; p_amount_millimes: number; p_idempotency_key: string };
+        Returns: string;
+      };
+      create_sale_return: {
+        Args: {
+          p_sale_id: string;
+          p_lines: Json;
+          p_reason: string;
+          p_refund_method_id: string | null;
+          p_refund_amount_millimes: number | null;
+          p_idempotency_key: string;
+        };
+        Returns: string;
+      };
+      record_sale_refund: {
+        Args: { p_sale_id: string; p_method_id: string; p_amount_millimes: number; p_idempotency_key: string };
+        Returns: string;
+      };
+      sales_daily_summary: {
+        Args: { p_organization_id: string; p_day: string; p_location_id?: string | null };
+        Returns: Json;
+      };
+      customer_balances: {
+        Args: { p_organization_id: string };
+        Returns: { customer_id: string; customer_name: string; sales_count: number; balance_millimes: number }[];
+      };
+      check_sales_consistency: {
+        Args: { p_organization_id: string };
+        Returns: { sale_id: string; problem: string }[];
+      };
     };
     Enums: {
       org_role: OrgRole;
       invitation_status: InvitationStatus;
       stock_movement_type: StockMovementType;
+      payment_method_kind: PaymentMethodKind;
     };
     CompositeTypes: { [_ in never]: never };
   };

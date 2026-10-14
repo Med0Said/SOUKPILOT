@@ -53,10 +53,29 @@ const DB_ERROR_MESSAGES: Record<string, string> = {
   count_empty: "Comptez au moins un article avant de soumettre.",
   same_location: "Choisissez deux emplacements différents.",
   invalid_parameter: "Requête invalide. Rechargez la page.",
+  invalid_discount: "Remise invalide : elle ne peut pas dépasser le montant.",
+  discount_not_allowed: "Remise supérieure au maximum autorisé pour votre rôle.",
+  variant_inactive: "Article inactif : il ne peut pas être vendu.",
+  sale_amount_too_large: "Montant de vente trop élevé.",
+  invalid_payment: "Paiement invalide : vérifiez le mode et le montant.",
+  payment_exceeds_balance: "Le paiement dépasse le montant restant dû.",
+  customer_required_for_credit: "Pour une vente non soldée (crédit), choisissez un client.",
+  sale_not_found: "Vente introuvable.",
+  sale_not_draft: "Cette vente n'est plus un brouillon.",
+  sale_not_finalized: "Cette vente n'est pas validée.",
+  return_exceeds_sold: "Quantité retournée supérieure à la quantité vendue restante.",
+  refund_exceeds_balance: "Le remboursement dépasse le montant dû au client.",
+  sale_immutable: "Une vente validée ne peut pas être modifiée : utilisez un retour.",
 };
 
 /** Keys whose database `details` (e.g. the product name) is worth showing. */
-const KEYS_WITH_DETAIL = new Set(["insufficient_stock", "stock_not_tracked", "opening_already_recorded"]);
+const KEYS_WITH_DETAIL = new Set([
+  "insufficient_stock",
+  "stock_not_tracked",
+  "opening_already_recorded",
+  "variant_inactive",
+  "return_exceeds_sold",
+]);
 
 /** Like messageForDbError, appending useful details (« T-shirt (S) — disponible : 2 »). */
 export function messageWithDetail(error: { message?: string; code?: string; details?: string | null } | null | undefined): string {

@@ -13,6 +13,9 @@ export default async function SettingsPage() {
     { href: "/app/settings/organization", title: fr.nav.organization, body: t.organization },
     { href: "/app/settings/locations", title: fr.nav.locations, body: t.locations },
     { href: "/app/settings/members", title: fr.nav.members, body: t.members },
+    { href: "/app/settings/payment-methods", title: fr.paymentMethods.title, body: t.paymentMethods },
+    { href: "/app/customers", title: fr.nav.customers, body: t.customers },
+    { href: "/app/suppliers", title: fr.nav.suppliers, body: t.suppliers },
     { href: "/app/profile", title: fr.nav.profile, body: t.profile },
     { href: "/invitations", title: fr.nav.invitations, body: t.invitations },
   ];

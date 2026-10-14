@@ -87,6 +87,13 @@ Never run `supabase/seed.sql` in production.
   cookies and headers before sending.
 - Health check: planned (`/api/health` checking DB reachability) in M7.
 
+## Investigating a sale whose totals look wrong
+
+Run `select * from public.check_sales_consistency('<org id>')` (owner/manager).
+Any row names a sale whose stored totals disagree with its lines, payments,
+returns or stock movements. Finalized sales are never edited: correct with a
+return or a refund, and treat a non-empty result as a critical defect.
+
 ## Investigating an incorrect stock balance
 
 1. As owner/manager, run `select * from public.check_stock_reconciliation('<org id>')`

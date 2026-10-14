@@ -160,6 +160,60 @@ only produced from Milestones 4–5.
 **Visibility.** Quantities, movements, adjustments, counts and transfers: every member.
 Receipts and opening costs (they contain purchase costs): owner/manager only.
 
+## 2d. Sales, payments, returns, customers (implemented, Milestone 4)
+
+```
+customers ─┐         payment_methods (defaults: Espèces, Carte bancaire, Virement, Chèque)
+           ▼                     │
+sales (draft → finalized | cancelled) ──┬── sale_items ── sale_item_costs (owner/manager)
+           │                            ├── sale_payments (payment | refund)
+           │                            └── sale_returns ── sale_return_items
+           └── stock_movements (sale / customer_return) via private.apply_stock_lines
+```
+
+**Money rules** (SQL `private.compute_sale`, mirrored in `src/lib/domain/pricing.ts`, parity-tested):
+
+| Quantity | Definition |
+| --- | --- |
+| line gross | quantity × **current price from the database** (the browser never sends prices) |
+| line discount | round_half_up(gross × discount_bps / 10 000) |
+| line total | gross − line discount |
+| subtotal | Σ line totals |
+| total | subtotal − order discount (fixed amount, ≤ subtotal) |
+| order discount share | proportional to line totals; floor, leftover millimes to largest remainders (ties: first line) — Σ shares = order discount |
+| line net total | line total − share — Σ net totals = total |
+| return amount | round_half_up(net × returned_after / qty) − round_half_up(net × returned_before / qty) — a fully returned line refunds exactly its net total |
+| paid | Σ payments − Σ refunds (never negative) |
+| balance due | total − returned − paid (negative = owed to the customer) |
+
+**Invariants.**
+1. `finalize_sale` is one transaction: recompute prices → sale + lines + cost snapshots → number
+   (gap-free) → stock movements (insufficient stock aborts everything) → payments → audit.
+2. Idempotent on `finalize_idempotency_key` (also concurrent); payments, refunds and returns
+   each carry their own idempotency key.
+3. Cashiers: discount ≤ `organizations.cashier_max_discount_bps` per line and on the total
+   (`discount_not_allowed`); owner/manager unlimited.
+4. Partial payment (credit) requires a customer; payments never exceed the balance; refunds
+   never exceed what was overpaid. The sale row is locked for every money change.
+5. Finalized sales, their lines, payments and returns are immutable (triggers + no grants);
+   corrections are returns/refunds. Drafts can be edited or cancelled.
+6. Purchase cost is snapshotted per line at finalization in `sale_item_costs` (owner/manager only).
+7. `check_sales_consistency(org)` returns sales whose stored aggregates (paid, total, returned,
+   returned quantities, stock movements) disagree with their detail rows — must be empty.
+
+| Function | Who |
+| --- | --- |
+| `save_sale_draft`, `cancel_sale_draft`, `finalize_sale`, `record_sale_payment` | any member |
+| `create_sale_return` (restock optional per line, optional immediate refund), `record_sale_refund` | owner/manager |
+| `sales_daily_summary(org, day, location?)` — in the organization timezone | any member |
+| `customer_balances(org)` | any member |
+| `check_sales_consistency(org)` | owner/manager |
+
+**Daily summary definitions**: *sales total* = Σ totals of sales finalized that day;
+*returns* = Σ return amounts recorded that day (whatever the sale date); *net sales* =
+sales total − returns; *payments by method* = money received minus refunds that day;
+*credit given* = balance still due on that day's sales. Not an accounting ledger; no taxes.
+
 ## 3. Tenant isolation strategy
 
 1. RLS on every table; policies reference only `auth.uid()` through
@@ -177,20 +231,7 @@ Catalog (M2) is implemented — see §2b.
 
 Inventory (M3) is implemented — see §2c.
 
-### Sales (M4)
-- `sales (id, organization_id, location_id, number, status draft|finalized|cancelled, customer_id?, subtotal, discount_total, total, paid_total, idempotency_key uuid, finalized_at, finalized_by)`
-  - unique `(organization_id, idempotency_key)`, unique `(organization_id, location_id, number)`
-- `sale_items (sale_id, variant_id, quantity > 0, unit_price_millimes, discount_millimes, line_total, unit_cost_snapshot_millimes)`
-- `sale_payments (sale_id, method, amount_millimes > 0, received_at, idempotency_key)`
-- `payment_methods (organization_id, code, label, is_active)` — cash, card, transfer, …
-- `sale_returns`, `sale_return_items` — explicit reversal documents; return
-  movement restores stock only when marked *resellable*.
-- `document_sequences (organization_id, location_id, doc_type, next_value)` —
-  numbers allocated under row lock in the finalize transaction.
-- `finalize_sale(sale_id, idempotency_key, payment?)`: lock sale → recompute
-  prices/totals in SQL → lock stock levels → insert movements → payment →
-  audit; any failure rolls everything back; replay with same key returns the
-  original result.
+Sales (M4) is implemented — see §2d.
 
 ### Purchasing (M5)
 - `suppliers`, `purchase_orders`, `purchase_order_items (ordered_qty, received_qty ≤ ordered_qty, unit_cost)`,
@@ -198,7 +239,7 @@ Inventory (M3) is implemented — see §2c.
   `supplier_payments`. Ordering never moves stock; receipts do.
 
 ### Customers, cash, subscriptions (M4–M7)
-- `customers (organization_id, name, phone?, address?, notes)` — minimal data.
+- Customers are implemented (M4, §2d).
 - `cash_sessions`, `expenses`, `expense_categories` — operational cash, not accounting.
 - `subscriptions (organization_id, plan solo|business|multi_shop, status trial|active|past_due|cancelled, started_at, current_period_end)` +
   `subscription_events`; plan limits enforced in SQL functions.
@@ -210,7 +251,7 @@ Inventory (M3) is implemented — see §2c.
 | Create organization | `create_organization()` |
 | Membership / invitation changes | the respective function |
 | Receipt, opening stock, adjustment approval, count approval, transfer | one function each (M3) |
-| Finalize sale, record payment, return | one function each (M4) |
+| Finalize sale, record payment, return (+ refund), refund | one function each (M4) |
 | Goods receipt | one function (M5) |
 
 Nothing that changes stock or money is composed from several client calls.

@@ -29,6 +29,14 @@ export const PERMISSIONS = {
   "stock.count.manage": ["owner", "manager"],
   "stock.count.record": ["owner", "manager", "cashier"],
   "stock.valuation": ["owner", "manager"],
+  /** Record sales, drafts and later payments; create customers. */
+  "sales.sell": ["owner", "manager", "cashier"],
+  /** Returns and refunds move money back: owner/manager only. */
+  "sales.return": ["owner", "manager"],
+  /** Cost snapshots / estimated margin on sales. */
+  "sales.viewMargin": ["owner", "manager"],
+  "customers.manage": ["owner", "manager"],
+  "paymentMethods.manage": ["owner", "manager"],
 } as const satisfies Record<string, readonly OrgRole[]>;
 
 export type Permission = keyof typeof PERMISSIONS;

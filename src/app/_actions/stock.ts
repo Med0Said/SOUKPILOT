@@ -72,6 +72,8 @@ export type VariantSearchResult = {
   barcode: string | null;
   trackStock: boolean;
   quantity: number;
+  /** Current selling price (display only; sales are priced in SQL). */
+  priceMillimes: number;
 };
 
 export async function searchVariantsAction(
@@ -103,6 +105,7 @@ export async function searchVariantsAction(
     barcode: v.barcode,
     trackStock: v.track_stock,
     quantity: v.quantity,
+    priceMillimes: v.price_millimes,
   }));
 }
 

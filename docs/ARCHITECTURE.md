@@ -171,6 +171,20 @@ commits all-or-nothing, once.
 against double submission and races, and the database stays the authority
 even if someone calls the staging API with a crafted payload.
 
+### ADR-014 Sales: server-priced, one-transaction finalization, TS mirror for preview
+*Decision*: the cart sends variant ids, quantities, discount percentages and
+payments only. `finalize_sale` reads prices and costs from the database and
+does everything in one transaction. `src/lib/domain/pricing.ts` re-implements
+the same integer rules (BigInt for intermediates) for the live preview; a DB
+test asserts both produce identical line and sale amounts.
+*Returns, not edits*: a finalized sale is immutable; returns are documents
+with cumulative rounding, optional restock (resellable goods only) and an
+optional refund capped at the overpaid amount. Returns/refunds are
+owner/manager only (fraud risk at the till).
+*Concurrency*: the stock row lock prevents selling the last unit twice; the
+sale row lock serializes payments/returns on one sale. Both are covered by
+forced-overlap tests on PostgreSQL and mutation-checked.
+
 ### ADR-009 French-first, RTL-ready
 Strings live in `src/i18n/fr.ts`; layout uses logical properties
 (`ms-`, `pe-`, `border-e`, `text-start`) so Arabic can be enabled by switching

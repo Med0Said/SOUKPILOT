@@ -69,6 +69,12 @@ Last updated 2026-10-13 (Milestone 1).
 | Propose adjustments, enter stock counts | ✓ | ✓ | ✓ |
 | Approve adjustments and counts, start/cancel counts | ✓ | ✓ | – |
 | Stock valuation, reconciliation check | ✓ | ✓ | – |
+| Sell (finalize, drafts), record later payments, create customers | ✓ | ✓ | ✓ |
+| Discounts above the organization's cashier limit | ✓ | ✓ | – |
+| Returns and refunds | ✓ | ✓ | – |
+| Edit customers, manage payment methods | ✓ | ✓ | – |
+| See cost snapshots / estimated margin on sales | ✓ | ✓ | – |
+| Change the cashier discount limit | ✓ | – | – |
 
 Invariants: nobody changes their own role; owners cannot be invited (only
 promoted by an owner); an organization always keeps ≥ 1 owner (trigger).

@@ -9,6 +9,8 @@ export type NavItem = {
   /** Extra path prefixes that mark this item active (e.g. /app/profile under Paramètres). */
   also?: string[];
   exact?: boolean;
+  /** Hidden from the phone's bottom bar (still in the sidebar and Paramètres). */
+  desktopOnly?: boolean;
 };
 
 // Static class names (no inline style: the CSP forbids style attributes).
