@@ -58,6 +58,16 @@ test("capture key screens", async ({ page, browser, baseURL }) => {
   await page.screenshot({ path: `${dir}/10-reports-dark.png`, fullPage: true });
   await page.goto("/app");
   await page.screenshot({ path: `${dir}/11-dashboard-dark.png`, fullPage: true });
+  await page.goto("/app/catalog?sort=price_desc");
+  await page.getByRole("button", { name: "Enregistrer cette vue" }).click();
+  await page.getByLabel("Nom de la vue").fill("Les plus chers");
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  await page.screenshot({ path: `${dir}/12-catalog-views-dark.png` });
+  await page.keyboard.press("Control+k");
+  await page.getByRole("combobox", { name: /Rechercher un article/ }).fill("robe");
+  await expect(page.getByRole("option", { name: /Robe d'été lin/ })).toBeVisible();
+  await page.screenshot({ path: `${dir}/13-palette-dark.png` });
+  await page.keyboard.press("Escape");
 
   await page.locator("aside").getByRole("button", { name: "Réduire le menu" }).click();
   await page.getByRole("radio", { name: "Clair" }).count();

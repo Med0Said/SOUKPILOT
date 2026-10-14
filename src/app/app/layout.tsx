@@ -8,6 +8,7 @@ import { switchOrganizationAction } from "@/app/_actions/organizations";
 import { signOutAction } from "@/app/(auth)/actions";
 import { fr } from "@/i18n/fr";
 import { AppShell, type NavGroup, type NavItem } from "./app-shell";
+import type { PaletteCommand } from "@/components/ui/command-palette";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const { membership, memberships, user } = await requireOrgContext();
@@ -43,9 +44,35 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     { items: [{ key: "settings", href: "/app/settings", label: fr.nav.settings, also: ["/app/profile"] }] },
   ];
 
+  // Command palette: every page the role can open, plus frequent actions.
+  const goTo: PaletteCommand[] = [
+    ...groups.flatMap((g) => g.items).map((i) => ({ id: `nav:${i.href}`, group: "goTo" as const, label: i.label, href: i.href })),
+    { id: "nav:movements", group: "goTo", label: fr.stock.nav.movements, href: "/app/stock/movements" },
+    { id: "nav:profile", group: "goTo", label: fr.nav.profile, href: "/app/profile" },
+    ...(can(role, "locations.manage") ? [{ id: "nav:locations", group: "goTo" as const, label: fr.nav.locations, href: "/app/settings/locations" }] : []),
+    { id: "nav:members", group: "goTo", label: fr.nav.members, href: "/app/settings/members" },
+  ];
+  const actions: PaletteCommand[] = [
+    { id: "act:sale", group: "actions", label: fr.palette.newSale, href: "/app/sales/new", keywords: "vendre caisse ticket" },
+    { id: "act:unpaid", group: "actions", label: fr.palette.unpaid, href: "/app/sales?due=1", keywords: "credit impaye reste" },
+    { id: "act:customers-owing", group: "actions", label: fr.palette.customersOwing, href: "/app/customers?due=1", keywords: "credit dette" },
+    { id: "act:low", group: "actions", label: fr.palette.lowStock, href: "/app/stock?low=1", keywords: "rupture alerte" },
+    { id: "act:adjust", group: "actions", label: fr.palette.adjust, href: "/app/stock/adjustments/new", keywords: "correction perte casse" },
+    ...(can(role, "catalog.manage")
+      ? [{ id: "act:product", group: "actions" as const, label: fr.palette.newProduct, href: "/app/catalog/new", keywords: "produit creer" }]
+      : []),
+    ...(can(role, "stock.receive")
+      ? [{ id: "act:receive", group: "actions" as const, label: fr.palette.receive, href: "/app/stock/receipts/new", keywords: "livraison arrivage" }]
+      : []),
+    ...(can(role, "purchasing.manage")
+      ? [{ id: "act:po", group: "actions" as const, label: fr.palette.newPurchase, href: "/app/purchases/new", keywords: "bon de commande achat" }]
+      : []),
+  ];
+
   return (
     <AppShell
       groups={groups}
+      commands={[...actions, ...goTo]}
       organization={{ id: membership.organizationId, name: membership.organizationName, role: fr.roles[role] }}
       organizations={memberships.map((m) => ({ id: m.organizationId, name: m.organizationName }))}
       user={{ name: profile?.full_name ?? "", email: user.email ?? "" }}

@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { CommandPalette, PaletteTrigger, type PaletteCommand } from "@/components/ui/command-palette";
 import { SIDEBAR_COOKIE, type Theme } from "@/lib/ui/preferences";
 import { savePreference } from "@/lib/ui/browser-preferences";
 import { fr } from "@/i18n/fr";
@@ -66,6 +67,7 @@ function useIsActive() {
 type Props = {
   children: ReactNode;
   groups: NavGroup[];
+  commands: PaletteCommand[];
   organization: { id: string; name: string; role: string };
   organizations: { id: string; name: string }[];
   user: { name: string; email: string };
@@ -78,6 +80,7 @@ type Props = {
 export function AppShell({
   children,
   groups,
+  commands,
   organization,
   organizations,
   user,
@@ -124,6 +127,15 @@ export function AppShell({
             switchOrganizationAction={switchOrganizationAction}
           />
         ) : null}
+
+        <div className="px-3 pt-3">
+          <PaletteTrigger
+            compact={collapsed}
+            className={`flex min-h-10 w-full items-center gap-2 rounded-lg border border-border bg-background px-3 text-sm text-muted hover:border-primary hover:text-foreground ${
+              collapsed ? "justify-center" : ""
+            }`}
+          />
+        </div>
 
         <nav aria-label={fr.nav.mainNavigation} className="flex-1 space-y-4 overflow-y-auto p-3">
           {groups.map((group, index) => (
@@ -204,6 +216,7 @@ export function AppShell({
           </Link>
           <div className="flex min-w-0 items-center gap-2">
             <span className="truncate text-sm text-muted">{organization.name}</span>
+            <PaletteTrigger compact className="inline-flex size-10 items-center justify-center rounded-full text-muted hover:bg-background" />
             <Link
               href="/app/profile"
               aria-label={fr.nav.profile}
@@ -219,6 +232,8 @@ export function AppShell({
             </form>
           </div>
         </header>
+
+        <CommandPalette commands={commands} />
 
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-6 md:px-8 md:pb-10">{children}</main>
 

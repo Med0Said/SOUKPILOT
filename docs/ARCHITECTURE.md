@@ -230,6 +230,10 @@ List filters live in the URL and are parsed once (`src/lib/ui/list-filters.ts`)
 for both the page and its CSV export, so an export is exactly the filtered
 list. CSV exports reuse the import's writer (formula guard), with numeric
 cells for amounts; the catalog export uses the import template's columns.
+The command palette is in-house (native `<dialog>` + ARIA combobox) instead of
+`cmdk`, whose dialog depends on Radix (style injection blocked by the CSP);
+data results come from a GET route calling `global_search`. Saved views live
+in localStorage (a per-device convenience: a view is only a query string).
 
 ### ADR-018 Reports: read-only SQL, documented formulas, own SVG charts (phase 3)
 *Decisions*:

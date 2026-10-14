@@ -9,12 +9,14 @@ import { logger } from "@/lib/logger";
 import { buttonClasses } from "@/components/ui/button";
 import { Alert, EmptyState, PageHeader } from "@/components/ui/layout";
 import type { StockMovementType } from "@/lib/supabase/database.types";
+import { ListSummary, Pagination } from "@/components/ui/list-controls";
+import { movementFilters } from "@/lib/ui/list-filters";
+import { listHref, pageCount } from "@/lib/ui/list-params";
 import { fr } from "@/i18n/fr";
 
 export const metadata: Metadata = { title: fr.stock.nav.movements };
 
 const PAGE_SIZE = 50;
-const UUID = /^[0-9a-f-]{36}$/i;
 
 export default async function MovementsPage({
   searchParams,
@@ -25,11 +27,9 @@ export default async function MovementsPage({
   const orgId = context.membership.organizationId;
   const tz = context.membership.timezone;
   const t = fr.stock.movements;
-  const params = await searchParams;
-  const variantId = params.variant && UUID.test(params.variant) ? params.variant : null;
-  const locationId = params.location && UUID.test(params.location) ? params.location : null;
-  const type = params.type && params.type in MOVEMENT_LABELS ? (params.type as StockMovementType) : null;
-  const page = Math.max(1, Math.min(1000, Number.parseInt(params.page ?? "1", 10) || 1));
+  const filters = movementFilters(await searchParams, (v) => v in MOVEMENT_LABELS);
+  const { variant: variantId, location: locationId, page } = filters;
+  const type = filters.type as StockMovementType | null;
 
   const supabase = await createSupabaseServerClient();
   let query = supabase
@@ -49,15 +49,8 @@ export default async function MovementsPage({
     ...(variantId ? [variantId] : []),
   ]);
   const locationName = new Map(locations.map((l) => [l.id, l.name]));
-  const pages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
-  const href = (p: number) => {
-    const sp = new URLSearchParams();
-    if (variantId) sp.set("variant", variantId);
-    if (locationId) sp.set("location", locationId);
-    if (type) sp.set("type", type);
-    if (p > 1) sp.set("page", String(p));
-    return `/app/stock/movements?${sp.toString()}`;
-  };
+  const pages = pageCount(count ?? 0, PAGE_SIZE);
+  const href = (p: number) => listHref("/app/stock/movements", { ...filters, page: p });
 
   return (
     <>
@@ -115,6 +108,7 @@ export default async function MovementsPage({
 
       {error ? <Alert tone="error">{fr.common.unexpectedError}</Alert> : null}
       {!error && (movements ?? []).length === 0 ? <EmptyState title={t.empty} /> : null}
+      {(count ?? 0) > 0 ? <ListSummary total={count ?? 0} exportHref={listHref("/app/stock/movements/export", { ...filters, page: null })} /> : null}
       <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
         {(movements ?? []).map((m) => (
           <li key={m.id} className="flex items-start justify-between gap-3 p-3">
@@ -136,25 +130,7 @@ export default async function MovementsPage({
           </li>
         ))}
       </ul>
-      {pages > 1 ? (
-        <nav aria-label={fr.catalog.pagination} className="mt-4 flex items-center justify-between text-sm">
-          {page > 1 ? (
-            <Link href={href(page - 1)} className={buttonClasses("secondary")}>
-              ← {fr.catalog.previous}
-            </Link>
-          ) : (
-            <span />
-          )}
-          <span className="text-muted">{fr.catalog.pageOf(page, pages)}</span>
-          {page < pages ? (
-            <Link href={href(page + 1)} className={buttonClasses("secondary")}>
-              {fr.catalog.next} →
-            </Link>
-          ) : (
-            <span />
-          )}
-        </nav>
-      ) : null}
+      <Pagination page={page} pages={pages} href={href} />
     </>
   );
 }

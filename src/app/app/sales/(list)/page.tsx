@@ -3,12 +3,17 @@ import Link from "next/link";
 import { requireOrgContext } from "@/lib/auth/organization";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatTnd } from "@/lib/domain/money";
-import { balanceDue } from "@/lib/domain/pricing";
 import { formatDateTime } from "@/lib/format";
 import { logger } from "@/lib/logger";
 import { buttonClasses } from "@/components/ui/button";
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui/layout";
+import { ListSummary, Pagination, SortSelect } from "@/components/ui/list-controls";
+import { SavedViews } from "@/components/ui/saved-views";
+import { SALES_DEFAULTS, canonical, salesFilters } from "@/lib/ui/list-filters";
+import { listHref, pageCount, parseDay, todayIn } from "@/lib/ui/list-params";
 import { fr } from "@/i18n/fr";
+
+const PAGE_SIZE = 30;
 
 export const metadata: Metadata = { title: fr.nav.sales };
 
@@ -24,38 +29,36 @@ type Summary = {
   payments: { method_id: string; label: string; received_millimes: number; refunded_millimes: number; net_millimes: number }[];
 };
 
-function todayIn(timeZone: string): string {
-  // en-CA formats as YYYY-MM-DD.
-  return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-}
+type Params = { day?: string; status?: string; q?: string; from?: string; to?: string; customer?: string; due?: string; sort?: string; page?: string };
 
-export default async function SalesPage({ searchParams }: { searchParams: Promise<{ day?: string; status?: string }> }) {
+export default async function SalesPage({ searchParams }: { searchParams: Promise<Params> }) {
   const context = await requireOrgContext();
   const { organizationId: orgId, timezone: tz } = context.membership;
   const t = fr.sales.list;
   const params = await searchParams;
-  const day = params.day && /^\d{4}-\d{2}-\d{2}$/.test(params.day) ? params.day : todayIn(tz);
-  const status = params.status === "draft" ? "draft" : "finalized";
+  const day = parseDay(params.day) ?? todayIn(tz);
+  const filters = salesFilters(params);
+  const { status, page, sort } = filters;
 
   const supabase = await createSupabaseServerClient();
   const [{ data: summaryRaw, error: summaryError }, { data: sales, error }] = await Promise.all([
     supabase.rpc("sales_daily_summary", { p_organization_id: orgId, p_day: day }),
-    status === "draft"
-      ? supabase
-          .from("sales")
-          .select("id, number, status, total_millimes, returned_millimes, paid_millimes, created_at, finalized_at, customers ( name )")
-          .eq("organization_id", orgId)
-          .eq("status", "draft")
-          .order("created_at", { ascending: false })
-          .limit(50)
-      : supabase
-          .from("sales")
-          .select("id, number, status, total_millimes, returned_millimes, paid_millimes, created_at, finalized_at, customers ( name )")
-          .eq("organization_id", orgId)
-          .eq("status", "finalized")
-          .order("number", { ascending: false })
-          .limit(50),
+    supabase.rpc("search_sales", {
+      p_organization_id: orgId,
+      p_status: status,
+      p_from: filters.from,
+      p_to: filters.to,
+      p_customer_id: filters.customer,
+      p_due_only: filters.due,
+      p_query: filters.q,
+      p_sort: sort,
+      p_limit: PAGE_SIZE,
+      p_offset: (page - 1) * PAGE_SIZE,
+    }),
   ]);
+  const total = sales?.[0]?.total_count ?? 0;
+  const pages = pageCount(total, PAGE_SIZE);
+  const listParams = { ...filters, status: status === "draft" ? status : null, day: params.day ? day : null, sort: sort === "recent" ? null : sort };
   if (error || summaryError) logger.error("sales.list_failed", { organizationId: orgId, code: (error ?? summaryError)?.code });
   const summary = summaryRaw as Summary | null;
 
@@ -137,33 +140,82 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
           </Link>
         </nav>
 
-        {(sales ?? []).length === 0 ? <EmptyState title={status === "draft" ? t.noDrafts : t.empty} /> : null}
-        <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
-          {(sales ?? []).map((s) => {
-            const due = balanceDue({ totalMillimes: s.total_millimes, returnedMillimes: s.returned_millimes, paidMillimes: s.paid_millimes });
-            return (
-              <li key={s.id}>
-                <Link
-                  href={s.status === "draft" ? `/app/sales/new?draft=${s.id}` : `/app/sales/${s.id}`}
-                  className="flex flex-wrap items-center justify-between gap-2 p-4 hover:bg-background"
-                >
-                  <span>
-                    <span className="font-medium">{s.number ? fr.sales.number(s.number) : t.draft}</span>
-                    <span className="block text-sm text-muted">
-                      {formatDateTime(s.finalized_at ?? s.created_at, tz)}
-                      {s.customers?.name ? ` · ${s.customers.name}` : ""}
+        <form role="search" method="get" className="grid gap-3 rounded-xl border border-border bg-surface p-3 sm:grid-cols-2 lg:grid-cols-[1fr_10rem_10rem_12rem_auto_auto] lg:items-end">
+          {status === "draft" ? <input type="hidden" name="status" value="draft" /> : null}
+          {filters.customer ? <input type="hidden" name="customer" value={filters.customer} /> : null}
+          <div>
+            <label htmlFor="sales-q" className="mb-1.5 block text-sm font-medium">
+              {fr.catalog.searchLabel}
+            </label>
+            <input
+              id="sales-q"
+              name="q"
+              type="search"
+              defaultValue={filters.q}
+              placeholder={fr.lists.sales.search}
+              autoComplete="off"
+              className="block min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-base"
+            />
+          </div>
+          <div>
+            <label htmlFor="sales-from" className="mb-1.5 block text-sm font-medium">
+              {fr.lists.sales.from}
+            </label>
+            <input id="sales-from" name="from" type="date" defaultValue={filters.from ?? ""} className="block min-h-11 w-full rounded-lg border border-border bg-surface px-3" />
+          </div>
+          <div>
+            <label htmlFor="sales-to" className="mb-1.5 block text-sm font-medium">
+              {fr.lists.sales.to}
+            </label>
+            <input id="sales-to" name="to" type="date" defaultValue={filters.to ?? ""} className="block min-h-11 w-full rounded-lg border border-border bg-surface px-3" />
+          </div>
+          <SortSelect value={sort} options={fr.lists.sorts.sales} />
+          {status === "finalized" ? (
+            <label className="flex min-h-11 items-center gap-2 text-sm">
+              <input type="checkbox" name="due" value="1" defaultChecked={filters.due} className="size-5" />
+              {fr.lists.sales.dueOnly}
+            </label>
+          ) : (
+            <span />
+          )}
+          <button type="submit" className={buttonClasses("secondary")}>
+            {fr.lists.filter}
+          </button>
+        </form>
+
+        <SavedViews organizationId={orgId} list="sales" basePath="/app/sales" currentQuery={canonical(filters, SALES_DEFAULTS)} />
+
+        {error ? <p className="text-sm text-danger">{fr.common.unexpectedError}</p> : null}
+        {!error && (sales ?? []).length === 0 ? <EmptyState title={status === "draft" ? t.noDrafts : t.empty} /> : null}
+        {(sales ?? []).length > 0 ? (
+          <div>
+            <ListSummary total={total} exportHref={listHref("/app/sales/export", { ...listParams, day: null, page: null })} />
+            <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
+              {(sales ?? []).map((s) => (
+                <li key={s.sale_id}>
+                  <Link
+                    href={s.status === "draft" ? `/app/sales/new?draft=${s.sale_id}` : `/app/sales/${s.sale_id}`}
+                    className="flex flex-wrap items-center justify-between gap-2 p-4 hover:bg-background"
+                  >
+                    <span>
+                      <span className="font-medium">{s.number ? fr.sales.number(s.number) : t.draft}</span>
+                      <span className="block text-sm text-muted">
+                        {formatDateTime(s.finalized_at ?? s.created_at, tz)}
+                        {s.customer_name ? ` · ${s.customer_name}` : ""}
+                      </span>
                     </span>
-                  </span>
-                  <span className="flex items-center gap-2">
-                    {s.returned_millimes > 0 ? <Badge>{t.returned}</Badge> : null}
-                    {s.status === "finalized" && due > 0 ? <Badge tone="warning">{t.due(formatTnd(due))}</Badge> : null}
-                    <span className="font-semibold tabular-nums">{formatTnd(s.total_millimes)}</span>
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+                    <span className="flex items-center gap-2">
+                      {s.returned_millimes > 0 ? <Badge>{t.returned}</Badge> : null}
+                      {s.status === "finalized" && s.due_millimes > 0 ? <Badge tone="warning">{t.due(formatTnd(s.due_millimes))}</Badge> : null}
+                      <span className="font-semibold tabular-nums">{formatTnd(s.total_millimes)}</span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <Pagination page={page} pages={pages} href={(n) => listHref("/app/sales", { ...listParams, page: n })} />
+          </div>
+        ) : null}
       </div>
     </>
   );

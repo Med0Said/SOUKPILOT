@@ -6,13 +6,15 @@ import { formatTnd } from "@/lib/domain/money";
 import { logger } from "@/lib/logger";
 import { buttonClasses } from "@/components/ui/button";
 import { Alert, Badge, EmptyState, PageHeader } from "@/components/ui/layout";
+import { ListSummary, Pagination, SortSelect } from "@/components/ui/list-controls";
+import { SavedViews } from "@/components/ui/saved-views";
+import { CATALOG_DEFAULTS, canonical, catalogFilters, type SearchParams } from "@/lib/ui/list-filters";
+import { listHref, pageCount } from "@/lib/ui/list-params";
 import { fr } from "@/i18n/fr";
 
 export const metadata: Metadata = { title: fr.nav.catalog };
 
 const PAGE_SIZE = 30;
-
-type SearchParams = { q?: string; category?: string; inactive?: string; page?: string };
 
 function priceRange(min: number | null, max: number | null): string {
   if (min === null || max === null) return "—";
@@ -25,11 +27,8 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   const canManage = hasPermission(context, "catalog.manage");
   const t = fr.catalog;
 
-  const params = await searchParams;
-  const q = (params.q ?? "").slice(0, 100);
-  const categoryId = params.category && /^[0-9a-f-]{36}$/i.test(params.category) ? params.category : null;
-  const includeInactive = params.inactive === "1";
-  const page = Math.max(1, Math.min(1000, Number.parseInt(params.page ?? "1", 10) || 1));
+  const filters = catalogFilters(await searchParams);
+  const { q, category: categoryId, inactive: includeInactive, sort, page } = filters;
 
   const supabase = await createSupabaseServerClient();
   const [productsResult, categoriesResult] = await Promise.all([
@@ -40,6 +39,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
       p_include_inactive: includeInactive,
       p_limit: PAGE_SIZE,
       p_offset: (page - 1) * PAGE_SIZE,
+      p_sort: sort,
     }),
     supabase.from("categories").select("id, name").eq("organization_id", orgId).order("name"),
   ]);
@@ -47,16 +47,9 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
 
   const products = productsResult.data ?? [];
   const total = products[0]?.total_count ?? 0;
-  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const pageHref = (n: number) => {
-    const sp = new URLSearchParams();
-    if (q) sp.set("q", q);
-    if (categoryId) sp.set("category", categoryId);
-    if (includeInactive) sp.set("inactive", "1");
-    if (n > 1) sp.set("page", String(n));
-    const s = sp.toString();
-    return s ? `/app/catalog?${s}` : "/app/catalog";
-  };
+  const pages = pageCount(total, PAGE_SIZE);
+  const current = canonical(filters, CATALOG_DEFAULTS);
+  const pageHref = (n: number) => listHref("/app/catalog", { ...filters, page: n, sort: sort === "name" ? null : sort });
 
   return (
     <>
@@ -80,7 +73,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
         }
       />
 
-      <form role="search" method="get" className="mb-4 grid gap-3 rounded-xl border border-border bg-surface p-3 sm:grid-cols-[1fr_14rem_auto_auto] sm:items-end">
+      <form role="search" method="get" className="mb-4 grid gap-3 rounded-xl border border-border bg-surface p-3 sm:grid-cols-[1fr_12rem_12rem_auto_auto] sm:items-end">
         <div>
           <label htmlFor="q" className="mb-1.5 block text-sm font-medium">
             {t.searchLabel}
@@ -113,6 +106,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
             ))}
           </select>
         </div>
+        <SortSelect value={sort} options={fr.lists.sorts.catalog} />
         <label className="flex min-h-11 items-center gap-2 text-sm">
           <input type="checkbox" name="inactive" value="1" defaultChecked={includeInactive} className="size-5" />
           {t.showInactive}
@@ -121,6 +115,8 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
           {t.searchButton}
         </button>
       </form>
+
+      <SavedViews organizationId={orgId} list="catalog" basePath="/app/catalog" currentQuery={current} />
 
       {productsResult.error ? <Alert tone="error">{fr.common.unexpectedError}</Alert> : null}
 
@@ -132,9 +128,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
 
       {products.length > 0 ? (
         <>
-          <p className="mb-2 text-sm text-muted" aria-live="polite">
-            {t.resultCount(total)}
-          </p>
+          <ListSummary total={total} exportHref={listHref("/app/catalog/export", { ...filters, page: null })} />
           <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
             {products.map((p) => (
               <li key={p.product_id}>
@@ -157,25 +151,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
               </li>
             ))}
           </ul>
-          {pages > 1 ? (
-            <nav aria-label={t.pagination} className="mt-4 flex items-center justify-between gap-2 text-sm">
-              {page > 1 ? (
-                <Link href={pageHref(page - 1)} className={buttonClasses("secondary")}>
-                  ← {t.previous}
-                </Link>
-              ) : (
-                <span />
-              )}
-              <span className="text-muted">{t.pageOf(page, pages)}</span>
-              {page < pages ? (
-                <Link href={pageHref(page + 1)} className={buttonClasses("secondary")}>
-                  {t.next} →
-                </Link>
-              ) : (
-                <span />
-              )}
-            </nav>
-          ) : null}
+          <Pagination page={page} pages={pages} href={pageHref} />
         </>
       ) : null}
     </>

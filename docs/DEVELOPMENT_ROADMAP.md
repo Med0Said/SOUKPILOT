@@ -19,14 +19,18 @@ Legend: ✅ done & tested · 🟡 partial · ⬜ not started · ⛔ blocked (nee
 | Reports by location, by cashier; stock reports beyond valuation | ⬜ | Next |
 | Barcode scanning via camera | ⬜ | Still planned (Milestone 6 remainder) |
 
-## Modernization phase 2 — Productivity (in progress)
+## Modernization phase 2 — Productivity (2026-10-14)
 
 | Item | Status | Notes |
 | --- | --- | --- |
 | Accent-insensitive search (`unaccent`), incl. cart and stock pickers | ✅ | Migration `20261018090000_search.sql`, DB tests |
 | Sortable / filterable list functions (articles, stock, customers, sales) and global search function | ✅ | DB tests (RLS: cashier never sees suppliers or orders) |
 | CSV export building blocks (formula guard, numeric cells, catalog export = import template) | ✅ | Unit tests (round-trip through the importer) |
-| Screens: Ctrl/Cmd+K palette, pagination/sort/saved views on lists, export buttons | ⬜ | Not wired yet |
+| Ctrl/Cmd+K command palette: pages, actions (by role), live data search (articles, clients, suppliers, sales and orders by number) | ✅ | E2E: keyboard, accents, Esc; cashier gets no supplier (E2E + DB) |
+| Lists with sort, pagination, filters in the URL: articles, stock, sales (dates, unpaid, number/client), clients (owing), purchases (supplier), movements | ✅ | E2E: 35 articles over 2 pages |
+| Saved views (named filters, per device) | ✅ | E2E: save, reopen, delete |
+| CSV export of every list (all filtered rows, up to 10 000) | ✅ | E2E checks file content; cashier export has no purchase cost; purchases export refused to cashiers |
+| Favourites / recent pages | ⬜ | Not built (the palette covers fast navigation) |
 
 ## Modernization phase 1 — UI foundation (2026-10-14)
 

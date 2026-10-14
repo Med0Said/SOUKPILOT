@@ -143,3 +143,19 @@ test("purchasing: order, place, partial receipt, supplier payment and balance", 
   await page.reload();
   await expect(page.getByText("Reste dû", { exact: true }).locator("..")).toContainText(/28,000\s*DT/);
 });
+
+test("global search and exports follow the roles", async ({ page }) => {
+  await signIn(page, owner);
+  const asOwner = (await (await page.request.get("/app/search?q=grossiste")).json()) as { results: { kind: string }[] };
+  expect(asOwner.results.map((r) => r.kind)).toContain("supplier");
+  await page.context().clearCookies();
+
+  await signIn(page, cashier);
+  const asCashier = (await (await page.request.get("/app/search?q=grossiste")).json()) as { results: { kind: string }[] };
+  expect(asCashier.results).toEqual([]);
+  expect((await page.request.get("/app/purchases/export")).status()).toBe(403);
+  // A cashier's catalog export carries no purchase cost column.
+  const csv = await (await page.request.get("/app/catalog/export")).text();
+  expect(csv.split("\r\n")[0]).not.toContain("prix_achat");
+  expect(csv).toContain(product);
+});
