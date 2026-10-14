@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { hasPermission, requireOrgContext } from "@/lib/auth/organization";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { Alert, PageHeader } from "@/components/ui/layout";
+import { Alert, Breadcrumbs, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 import { ProductForm } from "./product-form";
 
@@ -23,9 +22,7 @@ export default async function NewProductPage() {
 
   return (
     <>
-      <Link href="/app/catalog" className="mb-3 inline-block text-sm text-primary underline-offset-4 hover:underline">
-        ← {fr.nav.catalog}
-      </Link>
+      <Breadcrumbs items={[{ label: fr.nav.catalog, href: "/app/catalog" }, { label: fr.catalog.newProduct }]} />
       <PageHeader title={fr.catalog.newProduct} />
       <ProductForm organizationId={orgId} categories={categories.data ?? []} suppliers={suppliers.data ?? []} />
     </>

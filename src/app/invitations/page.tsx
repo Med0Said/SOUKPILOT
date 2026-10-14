@@ -7,6 +7,7 @@ import { logger } from "@/lib/logger";
 import { formatDate } from "@/lib/format";
 import { Alert } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
+import { Logo } from "@/components/brand/logo";
 import { InvitationResponse } from "./invitation-response";
 
 export const metadata: Metadata = { title: fr.invitations.title };
@@ -22,7 +23,9 @@ export default async function InvitationsPage() {
 
   return (
     <main className="mx-auto max-w-lg px-4 py-10">
-      <p className="mb-6 text-xl font-semibold text-primary">{fr.app.name}</p>
+      <div className="mb-6">
+        <Logo />
+      </div>
       <h1 className="text-2xl font-semibold">{fr.invitations.title}</h1>
       <p className="mb-6 mt-1 text-sm text-muted">{fr.invitations.subtitle}</p>
 

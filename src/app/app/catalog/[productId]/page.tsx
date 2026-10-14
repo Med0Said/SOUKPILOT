@@ -6,7 +6,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatTnd, formatTndInput } from "@/lib/domain/money";
 import { variantLabel } from "@/lib/domain/catalog";
 import { logger } from "@/lib/logger";
-import { Alert, Badge, Card, PageHeader } from "@/components/ui/layout";
+import { Alert, Badge, Breadcrumbs, Card, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 import { ProductEditForm, VariantEditor } from "./product-editors";
 
@@ -65,9 +65,7 @@ export default async function ProductPage({
 
   return (
     <>
-      <Link href="/app/catalog" className="mb-3 inline-block text-sm text-primary underline-offset-4 hover:underline">
-        ← {fr.nav.catalog}
-      </Link>
+      <Breadcrumbs items={[{ label: fr.nav.catalog, href: "/app/catalog" }, { label: product.name }]} />
       <PageHeader
         title={product.name}
         subtitle={product.categories?.name ?? fr.catalog.noCategory}

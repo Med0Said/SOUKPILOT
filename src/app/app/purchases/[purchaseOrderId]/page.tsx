@@ -10,7 +10,7 @@ import { poNumber, poStatusTone } from "@/lib/domain/purchasing";
 import { documentNumber } from "@/lib/domain/stock";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { buttonClasses } from "@/components/ui/button";
-import { Alert, Badge, Card, PageHeader } from "@/components/ui/layout";
+import { Alert, Badge, Breadcrumbs, Card, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 import { PoTransitions, ReceiveForm } from "./po-forms";
 
@@ -55,9 +55,7 @@ export default async function PurchaseOrderPage({
 
   return (
     <>
-      <Link href="/app/purchases" className="mb-3 inline-block text-sm text-primary underline-offset-4 hover:underline">
-        ← {fr.nav.purchases}
-      </Link>
+      <Breadcrumbs items={[{ label: fr.nav.purchases, href: "/app/purchases" }, { label: poNumber(po.number, fr.purchases.draft) }]} />
       <PageHeader
         title={poNumber(po.number, fr.purchases.draft)}
         subtitle={`${po.suppliers?.name ?? ""} · ${t.deliverTo(locations.find((l) => l.id === po.location_id)?.name ?? "")}`}

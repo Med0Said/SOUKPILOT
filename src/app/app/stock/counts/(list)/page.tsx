@@ -8,7 +8,7 @@ import { documentNumber } from "@/lib/domain/stock";
 import { formatDateTime } from "@/lib/format";
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
-import { CreateCountForm } from "./create-count-form";
+import { CreateCountForm } from "../create-count-form";
 
 export const metadata: Metadata = { title: fr.stock.nav.counts };
 

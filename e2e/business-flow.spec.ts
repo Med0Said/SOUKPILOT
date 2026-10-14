@@ -11,7 +11,7 @@
 import type { Page } from "@playwright/test";
 import { allowNotFoundResponses, expect, test } from "./fixtures";
 import pg from "pg";
-import { acceptNextConfirm, createOrganization, newAccount, pickVariant, signUpAndConfirm } from "./helpers";
+import { clickAndConfirm, createOrganization, newAccount, pickVariant, signUpAndConfirm } from "./helpers";
 
 const DB_URL = process.env.E2E_DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
 const money = (text: string) => new RegExp(text.replace(",", ",") + "\\s*DT");
@@ -65,8 +65,7 @@ test("owner sets up the shop, sells, gets paid partially, takes a return", async
   await pickVariant(page, product, new RegExp(`${product}\\s+M\\b`));
   await page.getByLabel("Quantité").nth(0).fill("10");
   await page.getByLabel("Quantité").nth(1).fill("5");
-  acceptNextConfirm(page);
-  await page.getByRole("button", { name: "Enregistrer le stock initial" }).click();
+    await clickAndConfirm(page, page.getByRole("button", { name: "Enregistrer le stock initial" }));
   await expect(page.getByText("Stock initial enregistré.")).toBeVisible();
 
   // 4. Supplier receipt: +3 S at 12,500 DT
@@ -76,8 +75,7 @@ test("owner sets up the shop, sells, gets paid partially, takes a return", async
   await pickVariant(page, product, new RegExp(`${product}\\s+S\\b`));
   await page.getByLabel("Quantité").fill("3");
   await page.getByLabel("Coût unitaire (DT)").fill("12,500");
-  acceptNextConfirm(page);
-  await page.getByRole("button", { name: "Enregistrer la réception" }).click();
+    await clickAndConfirm(page, page.getByRole("button", { name: "Enregistrer la réception" }));
   await expect(page.getByText("Réception enregistrée : le stock est à jour.")).toBeVisible();
   await expect(page.getByText(money("37,500")).first()).toBeVisible();
 
@@ -95,8 +93,7 @@ test("owner sets up the shop, sells, gets paid partially, takes a return", async
   await page.getByRole("button", { name: "+ Ajouter un paiement" }).click();
   await page.getByLabel("Montant (DT)").fill("30");
   await expect(page.getByText(/Reste à payer : 20,000\s*DT/)).toBeVisible();
-  acceptNextConfirm(page);
-  await page.getByRole("button", { name: "Valider la vente" }).click();
+    await clickAndConfirm(page, page.getByRole("button", { name: "Valider la vente" }));
   await expect(page.getByText("Vente enregistrée.")).toBeVisible();
   saleUrl = new URL(page.url()).pathname;
   await expect(page.getByRole("heading", { name: /Vente n° 000001/ })).toBeVisible();
@@ -110,8 +107,7 @@ test("owner sets up the shop, sells, gets paid partially, takes a return", async
   await page.getByLabel("Quantité").fill("1");
   await page.getByLabel("Motif").fill("Taille trop petite");
   await page.getByLabel("Rembourser maintenant (DT)").fill("5");
-  acceptNextConfirm(page);
-  await page.getByRole("button", { name: "Enregistrer le retour" }).click();
+    await clickAndConfirm(page, page.getByRole("button", { name: "Enregistrer le retour" }));
   await expect(page.getByText("Retour enregistré.")).toBeVisible();
   await expect(page.locator("dl").getByText("Reste à payer").locator("..")).toContainText(money("0,000"));
   await expect(page.getByText(/Remboursement · Espèces/)).toBeVisible();

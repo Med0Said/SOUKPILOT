@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth/session";
 import { getMemberships } from "@/lib/auth/organization";
 import { fr } from "@/i18n/fr";
+import { Logo } from "@/components/brand/logo";
 import { CreateOrganizationForm } from "./create-organization-form";
 
 export const metadata: Metadata = { title: fr.onboarding.title };
@@ -13,7 +14,9 @@ export default async function OnboardingPage() {
 
   return (
     <main className="mx-auto max-w-lg px-4 py-10">
-      <p className="mb-6 text-xl font-semibold text-primary">{fr.app.name}</p>
+      <div className="mb-6">
+        <Logo />
+      </div>
       <h1 className="text-2xl font-semibold">{fr.onboarding.title}</h1>
       <p className="mb-6 mt-1 text-sm text-muted">{fr.onboarding.subtitle}</p>
 

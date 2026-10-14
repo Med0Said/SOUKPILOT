@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { hasPermission, requireOrgContext } from "@/lib/auth/organization";
 import { MAX_IMPORT_ROWS, TEMPLATE_HEADERS } from "@/lib/domain/catalog-import";
-import { Alert, Card, PageHeader } from "@/components/ui/layout";
+import { Alert, Breadcrumbs, Card, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 import { ImportWizard } from "./import-wizard";
 
@@ -16,9 +15,7 @@ export default async function ImportPage() {
   }
   return (
     <>
-      <Link href="/app/catalog" className="mb-3 inline-block text-sm text-primary underline-offset-4 hover:underline">
-        ← {fr.nav.catalog}
-      </Link>
+      <Breadcrumbs items={[{ label: fr.nav.catalog, href: "/app/catalog" }, { label: t.title }]} />
       <PageHeader title={t.title} subtitle={t.subtitle} />
       <div className="space-y-4">
         <Card>

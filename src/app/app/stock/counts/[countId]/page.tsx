@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { hasPermission, requireOrgContext } from "@/lib/auth/organization";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { loadLocations, loadVariantInfo } from "@/lib/server/variants";
 import { countDifference, documentNumber, formatDelta } from "@/lib/domain/stock";
-import { Badge, Card, PageHeader } from "@/components/ui/layout";
+import { Badge, Breadcrumbs, Card, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 import { CountSheet, CountTransitions } from "./count-sheet";
 
@@ -46,9 +45,7 @@ export default async function CountPage({ params }: { params: Promise<{ countId:
 
   return (
     <>
-      <Link href="/app/stock/counts" className="mb-3 inline-block text-sm text-primary underline-offset-4 hover:underline">
-        ← {fr.stock.nav.counts}
-      </Link>
+      <Breadcrumbs items={[{ label: fr.nav.stock, href: "/app/stock" }, { label: fr.stock.nav.counts, href: "/app/stock/counts" }, { label: documentNumber("stock_count", count.number) }]} />
       <PageHeader
         title={documentNumber("stock_count", count.number)}
         subtitle={`${locations.find((l) => l.id === count.location_id)?.name ?? ""}${count.note ? ` · ${count.note}` : ""}`}

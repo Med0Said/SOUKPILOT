@@ -9,7 +9,7 @@ import { formatTnd } from "@/lib/domain/money";
 import { balanceDue, formatBps } from "@/lib/domain/pricing";
 import { formatDateTime } from "@/lib/format";
 import { buttonClasses } from "@/components/ui/button";
-import { Alert, Card, PageHeader } from "@/components/ui/layout";
+import { Alert, Breadcrumbs, Card, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 import { PaymentForm, ReturnForm } from "./sale-forms";
 
@@ -68,9 +68,7 @@ export default async function SalePage({
 
   return (
     <>
-      <Link href="/app/sales" className="mb-3 inline-block text-sm text-primary underline-offset-4 hover:underline">
-        ← {fr.nav.sales}
-      </Link>
+      <Breadcrumbs items={[{ label: fr.nav.sales, href: "/app/sales" }, { label: fr.sales.number(sale.number as number) }]} />
       <PageHeader
         title={fr.sales.number(sale.number as number)}
         subtitle={`${formatDateTime(sale.finalized_at as string, tz)} · ${data.locationName}${sale.customers?.name ? ` · ${sale.customers.name}` : ""}`}

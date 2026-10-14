@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 /** Local Mailpit started by `supabase start`. */
 const MAILPIT = process.env.MAILPIT_URL ?? "http://127.0.0.1:54324";
@@ -81,9 +81,16 @@ export async function createOrganization(page: Page, name: string): Promise<void
   await page.waitForURL(/\/app$/);
 }
 
-/** Accepts the next window.confirm (used for irreversible actions). */
-export function acceptNextConfirm(page: Page): void {
-  page.once("dialog", (dialog) => void dialog.accept());
+/**
+ * Clicks a button guarded by the in-app confirmation dialog (irreversible
+ * actions), checks the modal opened, and confirms.
+ */
+export async function clickAndConfirm(page: Page, button: Locator): Promise<void> {
+  await button.click();
+  const dialog = page.getByRole("dialog", { name: "Confirmation" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Confirmer" }).click();
+  await expect(dialog).toBeHidden();
 }
 
 /** Picks an article in a VariantPicker by typing then clicking the result. */

@@ -5,6 +5,21 @@ take priority over the schedule. Last updated 2026-10-14.
 
 Legend: ✅ done & tested · 🟡 partial · ⬜ not started · ⛔ blocked (needs something outside the repo)
 
+## Modernization phase 1 — UI foundation (2026-10-14)
+
+| Item | Status | Notes |
+| --- | --- | --- |
+| Brand proposal (« Sidi Bou Saïd »), logo, favicon, tokens | ✅ | docs/BRAND.md |
+| Light / dark / system theme, remembered, no flash | ✅ | E2E |
+| Grouped, collapsible sidebar; user menu; phone top and bottom bars with icons | ✅ | E2E (state remembered) |
+| Accessible confirmation dialog replacing `window.confirm` (11 call sites) | ✅ | E2E: cancel, Esc, focus, confirm |
+| Breadcrumbs on detail pages | ✅ | E2E |
+| Icons in alerts and empty states, refreshed badges, buttons and cards | ✅ | |
+| Loading skeletons (list pages) and a shared error screen | ✅ | 404 of detail pages preserved |
+| Visual review in light/dark, desktop/phone | ✅ | `SP_SCREENSHOTS=1 npx playwright test e2e/screenshots.spec.ts` |
+| Automated accessibility audit (axe) | ⬜ | Not added (would be a new dependency); keyboard and labels covered by E2E |
+| Toasts | ⬜ | Deferred: inline, announced messages already cover every action |
+
 ## Modernization phase 0 — Verification on a real Supabase (2026-10-14)
 
 | Item | Result |

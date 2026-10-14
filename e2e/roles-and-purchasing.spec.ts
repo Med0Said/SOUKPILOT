@@ -3,7 +3,7 @@
  */
 import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
-import { acceptNextConfirm, createOrganization, newAccount, pickVariant, signIn, signUpAndConfirm } from "./helpers";
+import { clickAndConfirm, createOrganization, newAccount, pickVariant, signIn, signUpAndConfirm } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
@@ -28,8 +28,7 @@ test("owner prepares the shop and invites a cashier", async ({ page, baseURL }) 
   await page.goto("/app/stock/opening");
   await pickVariant(page, product, new RegExp(product));
   await page.getByLabel("Quantité").fill("4");
-  acceptNextConfirm(page);
-  await page.getByRole("button", { name: "Enregistrer le stock initial" }).click();
+    await clickAndConfirm(page, page.getByRole("button", { name: "Enregistrer le stock initial" }));
   await expect(page.getByText("Stock initial enregistré.")).toBeVisible();
 
   await page.goto("/app/settings/members");
@@ -66,15 +65,13 @@ test("the cashier accepts the invitation and gets cashier rights only", async ({
   await pickVariant(page, product, new RegExp(product));
   await page.getByLabel("Remise %").fill("15");
   await page.getByRole("button", { name: /Tout en espèces/ }).click();
-  acceptNextConfirm(page);
-  await page.getByRole("button", { name: "Valider la vente" }).click();
+    await clickAndConfirm(page, page.getByRole("button", { name: "Valider la vente" }));
   await expect(page.getByText("Remise supérieure au maximum autorisé pour votre rôle.")).toBeVisible();
 
   // Within the limit it goes through.
   await page.getByLabel("Remise %").fill("10");
   await page.getByRole("button", { name: /Tout en espèces/ }).click();
-  acceptNextConfirm(page);
-  await page.getByRole("button", { name: "Valider la vente" }).click();
+    await clickAndConfirm(page, page.getByRole("button", { name: "Valider la vente" }));
   await expect(page.getByText("Vente enregistrée.")).toBeVisible();
   await expect(page.locator("dl").getByText("Total", { exact: true }).locator("..")).toContainText(/18,000\s*DT/);
   // Returns are owner/manager only: no return form for a cashier.
@@ -108,23 +105,20 @@ test("purchasing: order, place, partial receipt, supplier payment and balance", 
   await page.getByRole("button", { name: "Enregistrer le brouillon" }).click();
   await expect(page.getByText("Brouillon enregistré.")).toBeVisible();
 
-  acceptNextConfirm(page);
-  await page.getByRole("button", { name: "Passer la commande" }).click();
+    await clickAndConfirm(page, page.getByRole("button", { name: "Passer la commande" }));
   await expect(page.getByText("Commande passée.")).toBeVisible();
   await page.reload();
   await expect(page.getByRole("heading", { name: /BC-000001/ })).toBeVisible();
 
   // Partial delivery: 6 of 10.
   await page.getByLabel("Quantité reçue").fill("6");
-  acceptNextConfirm(page);
-  await page.getByRole("button", { name: "Enregistrer la réception" }).click();
+    await clickAndConfirm(page, page.getByRole("button", { name: "Enregistrer la réception" }));
   await expect(page.getByText("Réception enregistrée : le stock est à jour.")).toBeVisible();
   await expect(page.getByText("Reçu en partie")).toBeVisible();
 
   // More than the remaining 4 is refused.
   await page.getByLabel("Quantité reçue").fill("5");
-  acceptNextConfirm(page);
-  await page.getByRole("button", { name: "Enregistrer la réception" }).click();
+    await clickAndConfirm(page, page.getByRole("button", { name: "Enregistrer la réception" }));
   await expect(page.getByText(/Quantité reçue supérieure au reste à recevoir/)).toBeVisible();
 
   // Supplier account: 6 × 8 = 48 DT owed, pay 20 → 28 DT left.
@@ -133,8 +127,7 @@ test("purchasing: order, place, partial receipt, supplier payment and balance", 
   await page.getByRole("link", { name: /Voir le compte/ }).click();
   await expect(page.getByText("Reste dû", { exact: true }).locator("..")).toContainText(/48,000\s*DT/);
   await page.getByLabel("Montant (DT)").fill("20");
-  acceptNextConfirm(page);
-  await page.locator("form").filter({ hasText: "Paiement au fournisseur" }).getByRole("button", { name: "Enregistrer" }).click();
+    await clickAndConfirm(page, page.locator("form").filter({ hasText: "Paiement au fournisseur" }).getByRole("button", { name: "Enregistrer" }));
   await expect(page.getByText("Paiement enregistré.")).toBeVisible();
   await page.reload();
   await expect(page.getByText("Reste dû", { exact: true }).locator("..")).toContainText(/28,000\s*DT/);

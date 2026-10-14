@@ -202,6 +202,24 @@ separate supplier-invoice document in the MVP.
 *Limits*: invoice-level matching (price differences, credit notes), supplier
 returns and payment allocation to specific orders are not modelled yet.
 
+### ADR-016 UI foundation without a component framework (phase 1)
+*Decisions*:
+- Keep Tailwind and in-house primitives; one new dependency, `lucide-react`.
+- Confirmation dialogs use the native `<dialog>` element instead of Radix:
+  built-in focus trap, Esc, inert background, no JS dependency, and no
+  injected `<style>` tags (Radix's scroll-lock injects them, which the CSP
+  blocks).
+- Theme and sidebar state live in plain cookies read server-side, so the
+  first render is correct without an inline script.
+- Loading skeletons only on list pages, placed in `(list)` route groups:
+  a loading boundary above a detail page makes Next.js stream with status 200
+  before `notFound()`, which would turn the 404 of a forbidden/missing record
+  into a 200 (caught by an E2E test).
+- A custom `not-found` page replaces Next's built-in one, whose inline
+  styles are blocked by the CSP.
+*Guard*: every E2E test fails on a console error or CSP violation.
+See docs/BRAND.md for tokens and rules.
+
 ### ADR-009 French-first, RTL-ready
 Strings live in `src/i18n/fr.ts`; layout uses logical properties
 (`ms-`, `pe-`, `border-e`, `text-start`) so Arabic can be enabled by switching

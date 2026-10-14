@@ -1,57 +1,104 @@
 @import "tailwindcss";
 
 /*
- * Design tokens. Layout code uses logical properties (ms/me/ps/pe, start/end)
- * so a future RTL (Arabic) layout only needs dir="rtl".
+ * SoukPilot design tokens — "Sidi Bou Saïd" palette (docs/BRAND.md).
+ * Theme is chosen by data-theme on <html>: light | dark | system (follows the
+ * OS). Set server-side from the sp_theme cookie, so there is no flash and no
+ * inline script (the CSP forbids inline scripts/styles).
+ * Layout code uses logical properties (ms/me/ps/pe, start/end) for future RTL.
  */
-:root {
-  --background: #f7f7f5;
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+  --background: #f5f7fa;
   --surface: #ffffff;
-  --foreground: #1c1917;
-  --muted: #57534e;
-  --border: #e7e5e4;
-  --primary: #0f766e;
-  --primary-hover: #115e59;
+  --surface-raised: #ffffff;
+  --foreground: #14213d;
+  --muted: #5b6478;
+  --border: #e2e7ef;
+  --primary: #1e5ba8;
+  --primary-hover: #174a8b;
+  --primary-soft: #e8f0fa;
   --primary-foreground: #ffffff;
+  --accent: #c4512d;
   --danger: #b91c1c;
   --danger-soft: #fef2f2;
   --success: #15803d;
   --success-soft: #f0fdf4;
-  --focus: #f59e0b;
+  --warning: #a14a07;
+  --warning-soft: #fff7e6;
+  --focus: #c4512d;
+  --overlay: rgb(20 33 61 / 0.45);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #0b1220;
+  --surface: #111a2e;
+  --surface-raised: #17223a;
+  --foreground: #e6eaf2;
+  --muted: #9aa4b8;
+  --border: #24324d;
+  --primary: #7aaeff;
+  --primary-hover: #9cc2ff;
+  --primary-soft: #18294d;
+  --primary-foreground: #0b1220;
+  --accent: #f08a5d;
+  --danger: #f87171;
+  --danger-soft: #2a1414;
+  --success: #4ade80;
+  --success-soft: #0f2a1c;
+  --warning: #fbbf24;
+  --warning-soft: #2a2110;
+  --focus: #f08a5d;
+  --overlay: rgb(0 0 0 / 0.6);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #121110;
-    --surface: #1c1a19;
-    --foreground: #f5f5f4;
-    --muted: #a8a29e;
-    --border: #2f2c2a;
-    --primary: #2dd4bf;
-    --primary-hover: #5eead4;
-    --primary-foreground: #042f2e;
+  :root[data-theme="system"] {
+    color-scheme: dark;
+    --background: #0b1220;
+    --surface: #111a2e;
+    --surface-raised: #17223a;
+    --foreground: #e6eaf2;
+    --muted: #9aa4b8;
+    --border: #24324d;
+    --primary: #7aaeff;
+    --primary-hover: #9cc2ff;
+    --primary-soft: #18294d;
+    --primary-foreground: #0b1220;
+    --accent: #f08a5d;
     --danger: #f87171;
     --danger-soft: #2a1414;
     --success: #4ade80;
-    --success-soft: #11251a;
+    --success-soft: #0f2a1c;
+    --warning: #fbbf24;
+    --warning-soft: #2a2110;
+    --focus: #f08a5d;
+    --overlay: rgb(0 0 0 / 0.6);
   }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
   --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
   --color-focus: var(--focus);
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Arabic", sans-serif;
+  --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Arabic", sans-serif;
 }
 
 html {
@@ -62,9 +109,39 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
 }
 
 :focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
+}
+
+/* Native <dialog> (confirmations): backdrop and entry animation. */
+dialog::backdrop {
+  background: var(--overlay);
+}
+dialog[open] {
+  animation: sp-dialog-in 140ms ease-out;
+}
+@keyframes sp-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
 }

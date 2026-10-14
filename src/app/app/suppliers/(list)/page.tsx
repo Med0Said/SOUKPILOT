@@ -6,7 +6,7 @@ import { formatTnd } from "@/lib/domain/money";
 import Link from "next/link";
 import { Alert, Card, EmptyState, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
-import { SupplierForm } from "./supplier-form";
+import { SupplierForm } from "../supplier-form";
 
 export const metadata: Metadata = { title: fr.nav.suppliers };
 

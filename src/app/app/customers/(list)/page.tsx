@@ -6,7 +6,7 @@ import { formatTnd } from "@/lib/domain/money";
 import { logger } from "@/lib/logger";
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
-import { CustomerForm } from "./customer-form";
+import { CustomerForm } from "../customer-form";
 
 export const metadata: Metadata = { title: fr.nav.customers };
 

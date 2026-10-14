@@ -6,7 +6,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatTnd } from "@/lib/domain/money";
 import { balanceDue } from "@/lib/domain/pricing";
 import { formatDateTime } from "@/lib/format";
-import { Badge, Card, EmptyState, PageHeader } from "@/components/ui/layout";
+import { Badge, Breadcrumbs, Card, EmptyState, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 import { CustomerForm } from "../customer-form";
 
@@ -43,9 +43,7 @@ export default async function CustomerPage({ params }: { params: Promise<{ custo
 
   return (
     <>
-      <Link href="/app/customers" className="mb-3 inline-block text-sm text-primary underline-offset-4 hover:underline">
-        ← {fr.nav.customers}
-      </Link>
+      <Breadcrumbs items={[{ label: fr.nav.customers, href: "/app/customers" }, { label: customer.name }]} />
       <PageHeader
         title={customer.name}
         subtitle={customer.phone ?? undefined}

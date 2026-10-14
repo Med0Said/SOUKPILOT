@@ -23,6 +23,8 @@ export const fr = {
     signOut: "Se déconnecter",
     switchOrganization: "Organisation active",
     mainNavigation: "Navigation principale",
+    groupSell: "Vente",
+    groupGoods: "Stock & achats",
   },
   roles: {
     owner: "Propriétaire",
@@ -294,7 +296,7 @@ export const fr = {
     },
     picker: {
       label: "Ajouter un article",
-      placeholder: "Nom, SKU ou code-barres (scanner accepté)",
+      placeholder: "Nom, SKU ou code-barres",
       hint: "Tapez au moins 2 caractères. Avec un scanner, le code-barres est ajouté directement.",
       inStock: (n: number) => `${n} en stock`,
       none: "Aucun article trouvé.",
@@ -672,7 +674,7 @@ export const fr = {
       reference: "Référence (facultatif)",
       referencePlaceholder: "Ex. : chèque n° 1234, virement",
       confirm: "Enregistrer ce paiement ? Il ne pourra pas être modifié.",
-      record: "Enregistrer",
+      record: "Enregistrer le paiement",
       paymentRecorded: "Paiement enregistré.",
       refundRecorded: "Remboursement enregistré.",
       paymentsTitle: "Paiements",
@@ -681,6 +683,18 @@ export const fr = {
       receiptsTitle: "Réceptions",
       noReceipts: "Aucune réception.",
       edit: "Modifier le fournisseur",
+    },
+  },
+  ui: {
+    breadcrumbs: "Fil d'Ariane",
+    collapseSidebar: "Réduire le menu",
+    expandSidebar: "Déplier le menu",
+    theme: { label: "Thème", light: "Clair", dark: "Sombre", system: "Automatique (système)" },
+    confirm: { title: "Confirmation", cancel: "Annuler", confirm: "Confirmer" },
+    error: {
+      title: "Une erreur est survenue",
+      body: "La page n'a pas pu être chargée. Vos données ne sont pas perdues : réessayez dans un instant.",
+      retry: "Réessayer",
     },
   },
   settingsHub: {

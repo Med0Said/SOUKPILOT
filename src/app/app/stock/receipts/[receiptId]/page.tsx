@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { hasPermission, requireOrgContext } from "@/lib/auth/organization";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -7,7 +6,7 @@ import { loadLocations, loadVariantInfo } from "@/lib/server/variants";
 import { documentNumber } from "@/lib/domain/stock";
 import { formatTnd } from "@/lib/domain/money";
 import { formatDateTime } from "@/lib/format";
-import { Alert, Card, PageHeader } from "@/components/ui/layout";
+import { Alert, Breadcrumbs, Card, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 
 export const metadata: Metadata = { title: fr.stock.nav.receipts };
@@ -50,9 +49,7 @@ export default async function ReceiptPage({
 
   return (
     <>
-      <Link href="/app/stock/receipts" className="mb-3 inline-block text-sm text-primary underline-offset-4 hover:underline">
-        ← {fr.stock.nav.receipts}
-      </Link>
+      <Breadcrumbs items={[{ label: fr.nav.stock, href: "/app/stock" }, { label: fr.stock.nav.receipts, href: "/app/stock/receipts" }, { label: documentNumber("stock_receipt", receipt.number) }]} />
       <PageHeader
         title={documentNumber("stock_receipt", receipt.number)}
         subtitle={formatDateTime(receipt.created_at, context.membership.timezone)}

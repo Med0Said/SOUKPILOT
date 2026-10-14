@@ -7,7 +7,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatTnd } from "@/lib/domain/money";
 import { documentNumber } from "@/lib/domain/stock";
 import { formatDate, formatDateTime } from "@/lib/format";
-import { Alert, Badge, Card, EmptyState, PageHeader } from "@/components/ui/layout";
+import { Alert, Badge, Breadcrumbs, Card, EmptyState, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 import { SupplierForm } from "../supplier-form";
 import { SupplierPaymentForm } from "./supplier-payment-form";
@@ -59,9 +59,7 @@ export default async function SupplierPage({ params }: { params: Promise<{ suppl
 
   return (
     <>
-      <Link href="/app/suppliers" className="mb-3 inline-block text-sm text-primary underline-offset-4 hover:underline">
-        ← {fr.nav.suppliers}
-      </Link>
+      <Breadcrumbs items={[{ label: fr.nav.suppliers, href: "/app/suppliers" }, { label: supplier.name }]} />
       <PageHeader title={supplier.name} subtitle={supplier.phone ?? undefined} />
       <div className="space-y-4">
         <Card>
