@@ -12,6 +12,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { Alert, Breadcrumbs, Card, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 import { PaymentForm, ReturnForm } from "./sale-forms";
+import { must } from "@/lib/server/query";
 
 export const metadata: Metadata = { title: fr.nav.sales };
 
@@ -43,13 +44,13 @@ export default async function SalePage({
   // Estimated gross margin (owner/manager): net sales − cost snapshot of sold units, known costs only.
   let margin: { value: number; complete: boolean } | null = null;
   if (canMargin) {
-    const { data: costs } = await supabase
+    const costs = must(await supabase
       .from("sale_item_costs")
       .select("sale_item_id, unit_cost_millimes")
       .in(
         "sale_item_id",
         items.map((i) => i.id),
-      );
+      ), "sales.costs_load_failed", { organizationId: orgId });
     const cost = new Map((costs ?? []).map((c) => [c.sale_item_id, c.unit_cost_millimes]));
     // BigInt: cost × quantity can exceed Number.MAX_SAFE_INTEGER in extreme cases.
     let value = 0n;

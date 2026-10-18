@@ -11,6 +11,7 @@ import { Alert, Badge, Breadcrumbs, Card, EmptyState, PageHeader } from "@/compo
 import { fr } from "@/i18n/fr";
 import { SupplierForm } from "../supplier-form";
 import { SupplierPaymentForm } from "./supplier-payment-form";
+import { must } from "@/lib/server/query";
 
 export const metadata: Metadata = { title: fr.nav.suppliers };
 
@@ -28,15 +29,15 @@ export default async function SupplierPage({ params }: { params: Promise<{ suppl
   const t = fr.purchases.supplier;
 
   const supabase = await createSupabaseServerClient();
-  const { data: supplier } = await supabase
+  const supplier = must(await supabase
     .from("suppliers")
     .select("id, name, phone, email, notes, is_active")
     .eq("id", supplierId)
     .eq("organization_id", orgId)
-    .maybeSingle();
+    .maybeSingle(), "suppliers.detail_load_failed", { organizationId: orgId });
   if (!supplier) notFound();
 
-  const [{ data: balances }, { data: receipts }, { data: payments }, { data: methods }] = await Promise.all([
+  const [balancesResult, receiptsResult, paymentsResult, methodsResult] = await Promise.all([
     supabase.rpc("supplier_balances", { p_organization_id: orgId }),
     supabase
       .from("stock_receipts")
@@ -54,6 +55,10 @@ export default async function SupplierPage({ params }: { params: Promise<{ suppl
       .limit(100),
     supabase.from("payment_methods").select("id, label, is_active").eq("organization_id", orgId).order("sort_order"),
   ]);
+  const balances = must(balancesResult, "suppliers.balances_load_failed", { organizationId: orgId });
+  const receipts = must(receiptsResult, "suppliers.receipts_load_failed", { organizationId: orgId });
+  const payments = must(paymentsResult, "suppliers.payments_load_failed", { organizationId: orgId });
+  const methods = must(methodsResult, "suppliers.methods_load_failed", { organizationId: orgId });
   const b = (balances ?? []).find((x) => x.supplier_id === supplierId);
   const methodLabel = new Map((methods ?? []).map((m) => [m.id, m.label]));
 

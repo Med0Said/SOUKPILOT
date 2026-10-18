@@ -14,6 +14,7 @@ import { PURCHASE_DEFAULTS, canonical, purchaseFilters } from "@/lib/ui/list-fil
 import { listHref, pageCount } from "@/lib/ui/list-params";
 import { purchaseOrdersQuery } from "@/lib/server/purchase-orders";
 import { fr } from "@/i18n/fr";
+import { must } from "@/lib/server/query";
 
 const PAGE_SIZE = 30;
 
@@ -33,11 +34,13 @@ export default async function PurchasesPage({
 
   const supabase = await createSupabaseServerClient();
   const query = purchaseOrdersQuery(supabase, orgId, filters).range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
-  const [{ data: orders, error, count }, { data: balances }, { data: suppliers }] = await Promise.all([
+  const [{ data: orders, error, count }, balancesResult, suppliersResult] = await Promise.all([
     query,
     supabase.rpc("supplier_balances", { p_organization_id: orgId }),
     supabase.from("suppliers").select("id, name").eq("organization_id", orgId).order("name"),
   ]);
+  const balances = must(balancesResult, "purchases.balances_load_failed", { organizationId: orgId });
+  const suppliers = must(suppliersResult, "purchases.suppliers_load_failed", { organizationId: orgId });
   const total = count ?? 0;
   const listParams = { ...filters, view: view === "all" ? view : null, sort: sort === "recent" ? null : sort };
   if (error) logger.error("purchases.list_failed", { organizationId: orgId, code: error.code });

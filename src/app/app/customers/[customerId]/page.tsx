@@ -9,6 +9,7 @@ import { formatDateTime } from "@/lib/format";
 import { Badge, Breadcrumbs, Card, EmptyState, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 import { CustomerForm } from "../customer-form";
+import { must } from "@/lib/server/query";
 
 export const metadata: Metadata = { title: fr.nav.customers };
 
@@ -20,22 +21,22 @@ export default async function CustomerPage({ params }: { params: Promise<{ custo
   const t = fr.customers;
   const supabase = await createSupabaseServerClient();
 
-  const { data: customer } = await supabase
+  const customer = must(await supabase
     .from("customers")
     .select("id, name, phone, address, notes, is_active")
     .eq("id", customerId)
     .eq("organization_id", orgId)
-    .maybeSingle();
+    .maybeSingle(), "customers.detail_load_failed", { organizationId: orgId });
   if (!customer) notFound();
 
-  const { data: sales } = await supabase
+  const sales = must(await supabase
     .from("sales")
     .select("id, number, finalized_at, total_millimes, returned_millimes, paid_millimes")
     .eq("organization_id", orgId)
     .eq("customer_id", customerId)
     .eq("status", "finalized")
     .order("number", { ascending: false })
-    .limit(200);
+    .limit(200), "customers.history_load_failed", { organizationId: orgId });
   const balance = (sales ?? []).reduce(
     (s, x) => s + balanceDue({ totalMillimes: x.total_millimes, returnedMillimes: x.returned_millimes, paidMillimes: x.paid_millimes }),
     0,

@@ -5,6 +5,7 @@ import { formatBps } from "@/lib/domain/pricing";
 import { Badge, Card, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 import { DiscountSettingForm, PaymentMethodForm } from "./payment-method-forms";
+import { must } from "@/lib/server/query";
 
 export const metadata: Metadata = { title: fr.paymentMethods.title };
 
@@ -14,10 +15,12 @@ export default async function PaymentMethodsPage() {
   const canManage = hasPermission(context, "paymentMethods.manage");
   const t = fr.paymentMethods;
   const supabase = await createSupabaseServerClient();
-  const [{ data: methods }, { data: org }] = await Promise.all([
+  const [methodsResult, orgResult] = await Promise.all([
     supabase.from("payment_methods").select("id, label, kind, sort_order, is_active").eq("organization_id", orgId).order("sort_order"),
     supabase.from("organizations").select("cashier_max_discount_bps").eq("id", orgId).single(),
   ]);
+  const methods = must(methodsResult, "settings.payment_methods_load_failed", { organizationId: orgId });
+  const org = must(orgResult, "settings.organization_load_failed", { organizationId: orgId });
 
   return (
     <>

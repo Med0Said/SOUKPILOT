@@ -8,6 +8,7 @@ import { fr } from "@/i18n/fr";
 import { CurrencyConverter } from "@/components/integrations/currency-converter";
 import { enabledIntegrations } from "@/lib/server/integrations";
 import { PurchaseOrderForm, type PoLine } from "../_components/purchase-order-form";
+import { must } from "@/lib/server/query";
 
 export const metadata: Metadata = { title: fr.purchases.form.title };
 
@@ -26,18 +27,18 @@ export default async function NewPurchaseOrderPage({ searchParams }: { searchPar
 
   let draft: Parameters<typeof PurchaseOrderForm>[0]["draft"];
   if (draftId && /^[0-9a-f-]{36}$/i.test(draftId)) {
-    const { data: po } = await supabase
+    const po = must(await supabase
       .from("purchase_orders")
       .select("id, status, supplier_id, location_id, expected_date, reference, note")
       .eq("id", draftId)
       .eq("organization_id", orgId)
-      .maybeSingle();
+      .maybeSingle(), "purchases.draft_load_failed", { organizationId: orgId });
     if (po?.status === "draft") {
-      const { data: items } = await supabase
+      const items = must(await supabase
         .from("purchase_order_items")
         .select("variant_id, quantity, unit_cost_millimes")
         .eq("purchase_order_id", po.id)
-        .order("line_no");
+        .order("line_no"), "purchases.draft_items_load_failed", { organizationId: orgId });
       const info = await loadVariantInfo(supabase, orgId, (items ?? []).map((i) => i.variant_id));
       draft = {
         id: po.id,

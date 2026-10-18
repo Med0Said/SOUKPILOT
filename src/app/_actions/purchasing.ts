@@ -58,11 +58,13 @@ export async function variantCostsAction(organizationId: string, variantIds: str
   if (!UUID.test(organizationId) || !variantIds.every((v) => UUID.test(v)) || variantIds.length > 100) return {};
   if (!(await canPurchase(organizationId))) return {};
   const supabase = await createSupabaseServerClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("product_variant_costs")
     .select("variant_id, cost_millimes")
     .eq("organization_id", organizationId)
     .in("variant_id", variantIds);
+  // Pre-fill only: on failure the cost fields stay empty for the user to type.
+  if (error) logger.warn("purchases.cost_prefill_failed", { organizationId, code: error.code });
   return Object.fromEntries((data ?? []).map((c) => [c.variant_id, c.cost_millimes]));
 }
 

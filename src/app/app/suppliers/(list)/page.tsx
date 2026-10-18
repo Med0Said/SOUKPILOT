@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Alert, Card, EmptyState, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 import { SupplierForm } from "../supplier-form";
+import { must } from "@/lib/server/query";
 
 export const metadata: Metadata = { title: fr.nav.suppliers };
 
@@ -26,7 +27,7 @@ export default async function SuppliersPage() {
     .order("is_active", { ascending: false })
     .order("name");
   if (error) logger.error("suppliers.load_failed", { organizationId: orgId, code: error.code });
-  const { data: balances } = await supabase.rpc("supplier_balances", { p_organization_id: orgId });
+  const balances = must(await supabase.rpc("supplier_balances", { p_organization_id: orgId }), "suppliers.balances_load_failed", { organizationId: orgId });
   const balance = new Map((balances ?? []).map((b) => [b.supplier_id, b.balance_millimes]));
 
   return (

@@ -9,6 +9,7 @@ import { formatDateTime } from "@/lib/format";
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 import { CreateCountForm } from "../create-count-form";
+import { must } from "@/lib/server/query";
 
 export const metadata: Metadata = { title: fr.stock.nav.counts };
 
@@ -17,7 +18,7 @@ export default async function CountsPage() {
   const orgId = context.membership.organizationId;
   const t = fr.stock.counts;
   const supabase = await createSupabaseServerClient();
-  const [{ data: counts }, locations] = await Promise.all([
+  const [countsResult, locations] = await Promise.all([
     supabase
       .from("stock_counts")
       .select("id, number, location_id, status, note, created_at")
@@ -26,6 +27,7 @@ export default async function CountsPage() {
       .limit(50),
     loadLocations(supabase, orgId),
   ]);
+  const counts = must(countsResult, "stock.counts_load_failed", { organizationId: orgId });
   const name = new Map(locations.map((l) => [l.id, l.name]));
 
   return (

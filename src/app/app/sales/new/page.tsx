@@ -7,6 +7,7 @@ import { Alert, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 import { Cart, type CartLine } from "./cart";
 import { formatBps } from "@/lib/domain/pricing";
+import { must } from "@/lib/server/query";
 
 export const metadata: Metadata = { title: fr.sales.cart.title };
 
@@ -25,18 +26,18 @@ export default async function NewSalePage({ searchParams }: { searchParams: Prom
 
   let draft: Parameters<typeof Cart>[0]["draft"];
   if (draftId && /^[0-9a-f-]{36}$/i.test(draftId)) {
-    const { data: sale } = await supabase
+    const sale = must(await supabase
       .from("sales")
       .select("id, status, location_id, customer_id, note, order_discount_millimes")
       .eq("id", draftId)
       .eq("organization_id", orgId)
-      .maybeSingle();
+      .maybeSingle(), "sales.draft_load_failed", { organizationId: orgId });
     if (sale?.status === "draft") {
-      const { data: items } = await supabase
+      const items = must(await supabase
         .from("sale_items")
         .select("variant_id, product_name, variant_label, unit_price_millimes, quantity, discount_bps")
         .eq("sale_id", sale.id)
-        .order("line_no");
+        .order("line_no"), "sales.draft_items_load_failed", { organizationId: orgId });
       draft = {
         saleId: sale.id,
         locationId: sale.location_id,

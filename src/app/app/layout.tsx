@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { requireOrgContext } from "@/lib/auth/organization";
 import { can } from "@/lib/auth/permissions";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 import { SIDEBAR_COOKIE, THEME_COOKIE, parseSidebarCollapsed, parseTheme } from "@/lib/ui/preferences";
 import { switchOrganizationAction } from "@/app/_actions/organizations";
 import { signOutAction } from "@/app/(auth)/actions";
@@ -16,7 +17,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const cookieStore = await cookies();
 
   const supabase = await createSupabaseServerClient();
-  const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+  // Display name only: on failure the shell shows the e-mail instead of failing every page.
+  const { data: profile, error: profileError } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+  if (profileError) logger.warn("shell.profile_load_failed", { userId: user.id, code: profileError.code });
 
   // The phone's bottom bar shows the five daily workflows; the rest is
   // reachable from the desktop sidebar and from Paramètres.

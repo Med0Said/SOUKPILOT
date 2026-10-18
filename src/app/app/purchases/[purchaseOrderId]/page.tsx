@@ -13,6 +13,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { Alert, Badge, Breadcrumbs, Card, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 import { PoTransitions, ReceiveForm } from "./po-forms";
+import { must } from "@/lib/server/query";
 
 export const metadata: Metadata = { title: fr.nav.purchases };
 
@@ -33,15 +34,15 @@ export default async function PurchaseOrderPage({
   const t = fr.purchases.detail;
 
   const supabase = await createSupabaseServerClient();
-  const { data: po } = await supabase
+  const po = must(await supabase
     .from("purchase_orders")
     .select("*, suppliers ( name )")
     .eq("id", purchaseOrderId)
     .eq("organization_id", orgId)
-    .maybeSingle();
+    .maybeSingle(), "purchases.detail_load_failed", { organizationId: orgId });
   if (!po) notFound();
 
-  const [{ data: items }, { data: receipts }, locations] = await Promise.all([
+  const [itemsResult, receiptsResult, locations] = await Promise.all([
     supabase.from("purchase_order_items").select("*").eq("purchase_order_id", po.id).order("line_no"),
     supabase
       .from("stock_receipts")
@@ -50,6 +51,8 @@ export default async function PurchaseOrderPage({
       .order("number"),
     loadLocations(supabase, orgId),
   ]);
+  const items = must(itemsResult, "purchases.items_load_failed", { organizationId: orgId });
+  const receipts = must(receiptsResult, "purchases.receipts_load_failed", { organizationId: orgId });
   const info = await loadVariantInfo(supabase, orgId, (items ?? []).map((i) => i.variant_id));
   const open = po.status === "ordered" || po.status === "partially_received";
 

@@ -8,6 +8,7 @@ import { formatTnd } from "@/lib/domain/money";
 import { formatDateTime } from "@/lib/format";
 import { Alert, Breadcrumbs, Card, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
+import { must } from "@/lib/server/query";
 
 export const metadata: Metadata = { title: fr.stock.nav.receipts };
 
@@ -27,21 +28,22 @@ export default async function ReceiptPage({
   const t = fr.stock.receipts;
 
   const supabase = await createSupabaseServerClient();
-  const { data: receipt } = await supabase
+  const receipt = must(await supabase
     .from("stock_receipts")
     .select("id, number, location_id, supplier_id, reference, note, created_at")
     .eq("id", receiptId)
     .eq("organization_id", orgId)
-    .maybeSingle();
+    .maybeSingle(), "stock.receipt_load_failed", { organizationId: orgId });
   if (!receipt) notFound();
 
-  const [{ data: lines }, locations, supplier] = await Promise.all([
+  const [linesResult, locations, supplier] = await Promise.all([
     supabase.from("stock_receipt_lines").select("variant_id, quantity, unit_cost_millimes").eq("receipt_id", receiptId),
     loadLocations(supabase, orgId),
     receipt.supplier_id
       ? supabase.from("suppliers").select("name").eq("id", receipt.supplier_id).maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
+  const lines = must(linesResult, "stock.receipt_lines_load_failed", { organizationId: orgId });
   const variants = await loadVariantInfo(supabase, orgId, (lines ?? []).map((l) => l.variant_id));
   const totalUnits = (lines ?? []).reduce((n, l) => n + l.quantity, 0);
   const knownTotal = (lines ?? []).reduce((n, l) => n + (l.unit_cost_millimes ?? 0) * l.quantity, 0);

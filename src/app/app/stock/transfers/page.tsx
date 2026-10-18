@@ -8,6 +8,7 @@ import { formatDateTime } from "@/lib/format";
 import { buttonClasses } from "@/components/ui/button";
 import { Alert, Card, EmptyState, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
+import { must } from "@/lib/server/query";
 
 export const metadata: Metadata = { title: fr.stock.nav.transfers };
 
@@ -19,7 +20,7 @@ export default async function TransfersPage({ searchParams }: { searchParams: Pr
   const t = fr.stock.transfers;
 
   const supabase = await createSupabaseServerClient();
-  const [{ data: transfers }, locations] = await Promise.all([
+  const [transfersResult, locations] = await Promise.all([
     supabase
       .from("stock_transfers")
       .select("id, number, from_location_id, to_location_id, note, created_at")
@@ -28,6 +29,7 @@ export default async function TransfersPage({ searchParams }: { searchParams: Pr
       .limit(100),
     loadLocations(supabase, orgId),
   ]);
+  const transfers = must(transfersResult, "stock.transfers_load_failed", { organizationId: orgId });
   const ids = (transfers ?? []).map((tr) => tr.id);
   const { data: lines } = ids.length
     ? await supabase.from("stock_transfer_lines").select("transfer_id, variant_id, quantity").in("transfer_id", ids)

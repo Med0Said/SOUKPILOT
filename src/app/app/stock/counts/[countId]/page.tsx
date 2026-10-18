@@ -7,6 +7,7 @@ import { countDifference, documentNumber, formatDelta } from "@/lib/domain/stock
 import { Badge, Breadcrumbs, Card, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 import { CountSheet, CountTransitions } from "./count-sheet";
+import { must } from "@/lib/server/query";
 
 export const metadata: Metadata = { title: fr.stock.nav.counts };
 
@@ -19,17 +20,18 @@ export default async function CountPage({ params }: { params: Promise<{ countId:
   const t = fr.stock.counts;
 
   const supabase = await createSupabaseServerClient();
-  const { data: count } = await supabase
+  const count = must(await supabase
     .from("stock_counts")
     .select("id, number, location_id, status, note")
     .eq("id", countId)
     .eq("organization_id", orgId)
-    .maybeSingle();
+    .maybeSingle(), "stock.count_load_failed", { organizationId: orgId });
   if (!count) notFound();
-  const [{ data: items }, locations] = await Promise.all([
+  const [itemsResult, locations] = await Promise.all([
     supabase.from("stock_count_items").select("variant_id, expected_quantity, counted_quantity").eq("count_id", countId),
     loadLocations(supabase, orgId),
   ]);
+  const items = must(itemsResult, "stock.count_items_load_failed", { organizationId: orgId });
   const variants = await loadVariantInfo(supabase, orgId, (items ?? []).map((i) => i.variant_id));
   const rows = (items ?? [])
     .map((i) => ({

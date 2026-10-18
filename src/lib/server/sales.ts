@@ -1,14 +1,15 @@
 import "server-only";
 import type { SupabaseServerClient } from "@/lib/supabase/server";
+import { must } from "@/lib/server/query";
 
 /** Everything needed to display one finalized sale (RLS applies). */
 export async function loadSale(supabase: SupabaseServerClient, organizationId: string, saleId: string) {
-  const { data: sale } = await supabase
+  const sale = must(await supabase
     .from("sales")
     .select("*, customers ( name, phone )")
     .eq("id", saleId)
     .eq("organization_id", organizationId)
-    .maybeSingle();
+    .maybeSingle(), "sales.detail_load_failed", { organizationId });
   if (!sale) return null;
 
   const [items, payments, returns, methods, location, org] = await Promise.all([
@@ -20,13 +21,14 @@ export async function loadSale(supabase: SupabaseServerClient, organizationId: s
     supabase.from("organizations").select("name").eq("id", organizationId).single(),
   ]);
 
+  const fields = { organizationId };
   return {
     sale,
-    items: items.data ?? [],
-    payments: payments.data ?? [],
-    returns: returns.data ?? [],
-    methods: methods.data ?? [],
-    locationName: location.data?.name ?? "",
-    organizationName: org.data?.name ?? "",
+    items: must(items, "sales.items_load_failed", fields),
+    payments: must(payments, "sales.payments_load_failed", fields),
+    returns: must(returns, "sales.returns_load_failed", fields),
+    methods: must(methods, "sales.methods_load_failed", fields),
+    locationName: must(location, "sales.location_load_failed", fields)?.name ?? "",
+    organizationName: must(org, "sales.organization_load_failed", fields).name,
   };
 }
