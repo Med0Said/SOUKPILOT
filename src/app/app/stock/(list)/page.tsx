@@ -136,7 +136,7 @@ export default async function StockOverviewPage({ searchParams }: { searchParams
           </div>
           <SortSelect value={sort} options={fr.lists.sorts.stock} />
           <label className="flex min-h-11 items-center gap-2 text-sm">
-            <input type="checkbox" name="low" value="1" defaultChecked={lowOnly} className="size-5" />
+            <input type="checkbox" name="low" value="1" defaultChecked={lowOnly} className="size-6" />
             {t.lowOnly}
           </label>
           <button type="submit" className={buttonClasses("secondary")}>

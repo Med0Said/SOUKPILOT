@@ -227,7 +227,7 @@ function Kpi({ label, value, change, detail, strong = false }: { label: string; 
 
 function ExportLink({ href, label }: { href: string; label: string }) {
   return (
-    <a href={href} download className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+    <a href={href} download className="inline-flex min-h-11 items-center gap-1.5 text-sm text-primary hover:underline">
       <Download aria-hidden="true" className="size-4" />
       {label}
     </a>

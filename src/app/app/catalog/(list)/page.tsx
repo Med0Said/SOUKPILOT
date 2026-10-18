@@ -108,7 +108,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
         </div>
         <SortSelect value={sort} options={fr.lists.sorts.catalog} />
         <label className="flex min-h-11 items-center gap-2 text-sm">
-          <input type="checkbox" name="inactive" value="1" defaultChecked={includeInactive} className="size-5" />
+          <input type="checkbox" name="inactive" value="1" defaultChecked={includeInactive} className="size-6" />
           {t.showInactive}
         </label>
         <button type="submit" className={buttonClasses("secondary")}>

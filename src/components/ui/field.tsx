@@ -139,7 +139,7 @@ export function CheckboxField({
         id={id}
         name={input.name ?? id}
         type="checkbox"
-        className="mt-1 size-5 shrink-0 accent-[var(--primary)]"
+        className="mt-0.5 size-6 shrink-0 accent-[var(--primary)]"
         aria-describedby={hint ? `${id}-hint` : undefined}
         {...input}
       />

@@ -56,7 +56,7 @@ export function BarChart({
         }))}
       />
       <details className="mt-2 text-sm">
-        <summary className="cursor-pointer text-primary">{showTable}</summary>
+        <summary className="cursor-pointer py-3 text-primary">{showTable}</summary>
         <table className="mt-2 w-full text-sm">
           <caption className="sr-only">{tableCaption}</caption>
           <thead>

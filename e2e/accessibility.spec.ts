@@ -14,22 +14,11 @@ import { clickAndConfirm, createOrganization, newAccount, pickVariant, signUpAnd
 
 test.describe.configure({ mode: "serial" });
 
-// CONSTRAINTS.md E2 — audit findings A1 (20 px links/buttons) and A3 (phone
-// top-bar icon buttons shrink beside a long shop name), to be fixed in phase C.
-const SMALL_TARGET_EXCEPTIONS = [
-  /^\+ Nouveau client$/,
-  /^\+ Ajouter un paiement$/,
-  /\(CSV\)$/,
-  /^Voir les chiffres$/,
-  /^Mot de passe oublié \?$/,
-  /^checkbox$/,
-  /^Rechercher$/,
-  /^Mon profil$/,
-  /^Se déconnecter$/,
-];
+// Dated exceptions (CONSTRAINTS.md); none open. E2 (A1, A3) closed in phase C.
+const SMALL_TARGET_EXCEPTIONS: RegExp[] = [];
 const SMALL_TARGET_EXCEPTIONS_EXPIRE = "2026-11-30";
-// CONSTRAINTS.md E3 — audit finding A4: report tables widen their grid cards at 320 px.
-const REFLOW_EXCEPTIONS = ["reports"];
+// None open. E3 (A4) closed in phase C.
+const REFLOW_EXCEPTIONS: string[] = [];
 const REFLOW_EXCEPTIONS_EXPIRE = "2026-11-30";
 
 type Issue = { check: string; detail: string };
@@ -41,7 +30,9 @@ function measure(page: Page): Promise<Issue[]> {
     const visible = (el: Element) => {
       const r = el.getBoundingClientRect();
       const s = getComputedStyle(el);
-      return r.width > 0 && r.height > 0 && s.visibility !== "hidden" && s.display !== "none" && !el.closest("[hidden],[aria-hidden=true],dialog:not([open])");
+      // 1×1 px = the visually-hidden ("sr-only") pattern: read by screen readers, not a pointer target.
+      const visuallyHidden = r.width <= 1 && r.height <= 1;
+      return r.width > 0 && r.height > 0 && !visuallyHidden && s.visibility !== "hidden" && s.display !== "none" && !el.closest("[hidden],[aria-hidden=true],dialog:not([open])");
     };
     const rgba = (c: string) => {
       const m = c.match(/rgba?\(([^)]+)\)/);
@@ -217,4 +208,20 @@ test("main screens: light/dark, desktop/phone, reflow at 320 px, keyboard focus"
     const excepted = REFLOW_EXCEPTIONS.includes(name) && new Date().toISOString().slice(0, 10) <= REFLOW_EXCEPTIONS_EXPIRE;
     if (!excepted) expect(reflow, `horizontal scroll at 320 px on ${name}`).toEqual([]);
   }
+});
+
+test("a skip link is the first tab stop and moves focus to the page content", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByLabel("Adresse e-mail").fill(owner.email);
+  await page.getByLabel("Mot de passe").fill(owner.password);
+  await page.getByRole("button", { name: "Se connecter" }).click();
+  await page.waitForURL(/\/app/);
+  // A fresh page: keyboard navigation starts at the top of the document.
+  await page.reload();
+  await page.keyboard.press("Tab");
+  const skip = page.getByRole("link", { name: "Aller au contenu" });
+  await expect(skip).toBeFocused();
+  await expect(skip).toBeVisible();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("main#contenu")).toBeFocused();
 });

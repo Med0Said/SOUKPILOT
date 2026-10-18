@@ -6,7 +6,7 @@ import { fr } from "@/i18n/fr";
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <section className={`rounded-xl border border-border bg-surface p-4 shadow-[0_1px_2px_rgb(20_33_61/0.04)] sm:p-6 ${className}`}>
+    <section className={`min-w-0 rounded-xl border border-border bg-surface p-4 shadow-[0_1px_2px_rgb(20_33_61/0.04)] sm:p-6 ${className}`}>
       {children}
     </section>
   );

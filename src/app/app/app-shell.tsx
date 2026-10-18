@@ -101,6 +101,13 @@ export function AppShell({
 
   return (
     <div className={`min-h-dvh md:grid ${collapsed ? "md:grid-cols-[4.5rem_1fr]" : "md:grid-cols-[16rem_1fr]"}`}>
+      {/* WCAG 2.4.1: first tab stop, visible only when focused. */}
+      <a
+        href="#contenu"
+        className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-3 focus:text-primary-foreground"
+      >
+        {fr.ui.skipToContent}
+      </a>
       {/* Desktop sidebar */}
       <aside className="hidden border-e border-border bg-surface md:sticky md:top-0 md:flex md:h-dvh md:flex-col">
         <div className={`flex items-center gap-2 border-b border-border p-3 ${collapsed ? "justify-center" : "justify-between"}`}>
@@ -216,16 +223,16 @@ export function AppShell({
           </Link>
           <div className="flex min-w-0 items-center gap-2">
             <span className="truncate text-sm text-muted">{organization.name}</span>
-            <PaletteTrigger compact className="inline-flex size-10 items-center justify-center rounded-full text-muted hover:bg-background" />
+            <PaletteTrigger compact className="inline-flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-background" />
             <Link
               href="/app/profile"
               aria-label={fr.nav.profile}
-              className="inline-flex size-10 items-center justify-center rounded-full hover:bg-background"
+              className="inline-flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-background"
             >
               <UserRound aria-hidden="true" className="size-5" />
             </Link>
             <form action={signOutAction}>
-              <button type="submit" className="inline-flex size-10 items-center justify-center rounded-full text-muted hover:bg-background">
+              <button type="submit" className="inline-flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-background">
                 <LogOut aria-hidden="true" className="size-5" />
                 <span className="sr-only">{fr.nav.signOut}</span>
               </button>
@@ -235,7 +242,9 @@ export function AppShell({
 
         <CommandPalette commands={commands} />
 
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-6 md:px-8 md:pb-10">{children}</main>
+        <main id="contenu" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-6 outline-none md:px-8 md:pb-10">
+          {children}
+        </main>
 
         {/* Phone bottom navigation */}
         <nav

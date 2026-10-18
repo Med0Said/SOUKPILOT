@@ -767,6 +767,7 @@ export const fr = {
   },
   ui: {
     breadcrumbs: "Fil d'Ariane",
+    skipToContent: "Aller au contenu",
     collapseSidebar: "Réduire le menu",
     expandSidebar: "Déplier le menu",
     theme: { label: "Thème", light: "Clair", dark: "Sombre", system: "Automatique (système)" },

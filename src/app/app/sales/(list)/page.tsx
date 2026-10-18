@@ -172,7 +172,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
           <SortSelect value={sort} options={fr.lists.sorts.sales} />
           {status === "finalized" ? (
             <label className="flex min-h-11 items-center gap-2 text-sm">
-              <input type="checkbox" name="due" value="1" defaultChecked={filters.due} className="size-5" />
+              <input type="checkbox" name="due" value="1" defaultChecked={filters.due} className="size-6" />
               {fr.lists.sales.dueOnly}
             </label>
           ) : (

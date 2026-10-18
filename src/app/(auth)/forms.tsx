@@ -42,7 +42,7 @@ export function LoginForm({ next }: { next?: string }) {
       />
       <SubmitButton className="w-full">{t.loginButton}</SubmitButton>
       <div className="flex flex-col gap-2 text-sm">
-        <Link href="/forgot-password" className="text-primary underline-offset-4 hover:underline">
+        <Link href="/forgot-password" className="inline-flex min-h-11 w-fit items-center text-primary underline-offset-4 hover:underline">
           {t.forgotPassword}
         </Link>
         <p className="text-muted">

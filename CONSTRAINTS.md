@@ -81,6 +81,4 @@ Each exception names its owner and an expiry date; an expired exception fails it
 | ID | Rule | Path | Reason | Owner | Expires |
 | --- | --- | --- | --- | --- | --- |
 | E1 | sql-coverage | `public.find_catalog_conflicts` | Exercised only through the CSV import UI; a direct DB test is added in phase C | @said0 | 2026-11-30 |
-| E2 | a11y target size | cart "+ Nouveau client", "+ Ajouter un paiement", report CSV links, "Voir les chiffres", "Mot de passe oublié ?", checkboxes, phone top-bar icon buttons | Audit findings A1 and A3 (top-bar buttons shrink beside a long shop name); fixed in phase C | @said0 | 2026-11-30 |
-| E3 | a11y reflow 320 px | `/app/reports` | Audit finding A4: report tables widen their grid cards (337 px); fixed in phase C | @said0 | 2026-11-30 |
 | E4 | npm audit (dev) | `eslint-config-next@16.4.0` → `braces` | Lint toolchain only, never shipped; fixed by the patch update (finding T7) in phase C | @said0 | 2026-11-30 |

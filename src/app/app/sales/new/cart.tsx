@@ -282,7 +282,7 @@ export function Cart({
             {!newCustomer.open ? (
               <button
                 type="button"
-                className="text-sm text-primary hover:underline"
+                className="inline-flex min-h-11 items-center text-sm text-primary hover:underline"
                 onClick={() => setNewCustomer((c) => ({ ...c, open: true }))}
               >
                 + {t.newCustomer}
@@ -377,7 +377,7 @@ export function Cart({
         {methods[0] ? (
           <button
             type="button"
-            className="text-sm text-primary hover:underline"
+            className="inline-flex min-h-11 items-center text-sm text-primary hover:underline"
             onClick={() => setPayments((ps) => [...ps, { methodId: methods[0].id, amount: "" }])}
           >
             + {t.addPayment}

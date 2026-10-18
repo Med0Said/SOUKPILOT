@@ -73,7 +73,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
           </div>
           <SortSelect value={sort} options={fr.lists.sorts.customers} />
           <label className="flex min-h-11 items-center gap-2 text-sm">
-            <input type="checkbox" name="due" value="1" defaultChecked={filters.due} className="size-5" />
+            <input type="checkbox" name="due" value="1" defaultChecked={filters.due} className="size-6" />
             {fr.lists.customers.dueOnly}
           </label>
           <button type="submit" className={buttonClasses("secondary")}>
