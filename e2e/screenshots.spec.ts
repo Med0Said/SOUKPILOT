@@ -51,7 +51,7 @@ test("capture key screens", async ({ page, browser, baseURL }) => {
   await page.getByRole("button", { name: "Valider la vente" }).click();
   await page.waitForTimeout(400); // let the 140 ms entry animation finish
   await page.screenshot({ path: `${dir}/06-confirm-dialog-dark.png` });
-  await page.getByRole("button", { name: "Annuler" }).click();
+  await page.getByRole("button", { name: "Revenir" }).click();
   await clickAndConfirm(page, page.getByRole("button", { name: "Valider la vente" }));
   await expect(page.getByText("Vente enregistrée.")).toBeVisible();
   await page.goto("/app/reports?period=30d");

@@ -56,8 +56,9 @@ test("confirmation dialog: cancel and Esc submit nothing, confirm submits", asyn
 
   await submit.click();
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "Confirmer" })).toBeFocused();
-  await dialog.getByRole("button", { name: "Annuler" }).click();
+  // U1: the confirm button names the action; dismissing reads "Revenir" (never "Annuler").
+  await expect(dialog.getByRole("button", { name: "Enregistrer le stock initial" })).toBeFocused();
+  await dialog.getByRole("button", { name: "Revenir" }).click();
   await expect(dialog).toBeHidden();
 
   await submit.click();

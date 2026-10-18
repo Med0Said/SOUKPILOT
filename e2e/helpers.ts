@@ -86,10 +86,12 @@ export async function createOrganization(page: Page, name: string): Promise<void
  * actions), checks the modal opened, and confirms.
  */
 export async function clickAndConfirm(page: Page, button: Locator): Promise<void> {
+  const action = (await button.innerText()).trim();
   await button.click();
   const dialog = page.getByRole("dialog", { name: "Confirmation" });
   await expect(dialog).toBeVisible();
-  await dialog.getByRole("button", { name: "Confirmer" }).click();
+  // The confirm button repeats the action's own label (audit U1).
+  await dialog.getByRole("button", { name: action, exact: true }).click();
   await expect(dialog).toBeHidden();
 }
 

@@ -167,6 +167,18 @@ for (let i = findings.length - 1; i >= 0; i--) {
     findings.splice(i, 1);
   }
 }
+// An assertion changed because the expected behaviour changed (owner-approved)
+// is accepted per file with `Constraints-Test-Change-Approved: <path>`.
+// Only `assertion-removed`; skipped or deleted tests can never be waved through.
+const testChanges = new Set(
+  [...approvalLog.matchAll(/^Constraints-Test-Change-Approved:(.*)$/gim)].flatMap((m) => m[1].trim().split(/\s+/).filter(Boolean)),
+);
+for (let i = findings.length - 1; i >= 0; i--) {
+  if (findings[i].rule === 'assertion-removed' && testChanges.has(findings[i].file)) {
+    console.log(`floor-guard: assertion change in ${findings[i].file} approved in a commit trailer`);
+    findings.splice(i, 1);
+  }
+}
 
 if (findings.length === 0) { console.log('floor-guard: clean'); process.exit(0); }
 console.error('floor-guard: ' + findings.length + ' floor violation(s):');

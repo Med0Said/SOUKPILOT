@@ -771,7 +771,9 @@ export const fr = {
     collapseSidebar: "Réduire le menu",
     expandSidebar: "Déplier le menu",
     theme: { label: "Thème", light: "Clair", dark: "Sombre", system: "Automatique (système)" },
-    confirm: { title: "Confirmation", cancel: "Annuler", confirm: "Confirmer" },
+    // "Revenir", not "Annuler": the action being confirmed may itself be a
+    // cancellation ("Annuler la commande").
+    confirm: { title: "Confirmation", cancel: "Revenir", confirm: "Confirmer" },
     error: {
       title: "Une erreur est survenue",
       body: "La page n'a pas pu être chargée. Vos données ne sont pas perdues : réessayez dans un instant.",

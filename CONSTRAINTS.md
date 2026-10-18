@@ -18,6 +18,11 @@ Last reviewed: 2026-10-18 by @said0 (set up in modernization phase B).
 - This file does not get weakened to make a change pass
 
 Checked by `node scripts/constraints/floor-guard.mjs` (diff against `origin/master`; exit 1 blocks).
+Two moves can be accepted, only with the owner's approval recorded as a commit
+trailer: a new exception (`Constraints-Exception-Approved: E<n>`) and an
+assertion changed because the expected behaviour changed
+(`Constraints-Test-Change-Approved: <file>`). Skipped or deleted tests and
+suppression comments can never be waved through.
 The architecture rules in that list are reviewed by people; the guard catches the mechanical moves.
 
 ## Enforced with numbers

@@ -100,7 +100,8 @@ export function SubmitButton({
                   buttonRef.current?.click();
                 }}
               >
-                {fr.ui.confirm.confirm}
+                {/* Names the action ("Annuler la commande", "Valider la vente"). */}
+                {typeof children === "string" ? children : fr.ui.confirm.confirm}
               </Button>
             </div>
           </div>
