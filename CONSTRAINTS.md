@@ -59,10 +59,10 @@ The architecture rules in that list are reviewed by people; the guard catches th
 
 | Metric | Today (2026-10-18) | Direction | How measured |
 | --- | --- | --- | --- |
-| `report_sales_by_day`, 365 days, 50k sales | 15 000 ms | must fall (phase C target < 1 000 ms) | synthetic `sp_perf` database, phase A |
-| Count of 50k sales under RLS | 246 ms | must fall (phase C) | same |
-| `search_products` text search, 10k articles | 444 ms | must fall | same |
-| Movements page with exact count, 100k movements | 517 ms | must fall | same |
+| `report_sales_by_day`, 365 days, 50k sales | 92 ms (was 15 000 ms, fixed P1) | must not exceed 200 ms | synthetic `sp_perf` database (10k articles, 50k sales), median of 5 |
+| Sales list page 1 under RLS (50k sales) | 54 ms (was 365 ms, fixed P2) | must not exceed 120 ms | same |
+| `search_products` text search, 10k articles | 216 ms (was 444 ms) | must fall (finding P3) | same |
+| Movements page with exact count, 100k movements | 30 ms (was 517 ms, fixed P2) | must not exceed 100 ms | same |
 | E2E suite duration | ≈ 85 s (26 tests) | must not double | `npm run test:e2e` |
 | Dev-dependency vulnerabilities | 5 high (one chain) | must reach 0 | `npm audit --audit-level=high` |
 
