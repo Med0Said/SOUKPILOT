@@ -7,12 +7,12 @@
 import { randomUUID } from "node:crypto";
 import { expect, test } from "./fixtures";
 import { apiAs, rpc } from "./api";
-import { createOrganization, newAccount, signIn, signUpAndConfirm } from "./helpers";
+import { createOrganization, newAccount, pickVariant, signIn, signUpAndConfirm } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
 const owner = newAccount("Histories");
-const ids: { customer?: string; supplier?: string } = {};
+const ids: { customer?: string; supplier?: string; lastCustomer?: string } = {};
 
 test("seed: 205 credit sales, 35 receipts, 33 adjustments, 31 transfers, 31 counts, 31 supplier payments", async ({ page, baseURL }) => {
   test.setTimeout(240_000);
@@ -29,6 +29,12 @@ test("seed: 205 credit sales, 35 receipts, 33 adjustments, 31 transfers, 31 coun
   const { data: supplier } = await api.from("suppliers").insert({ organization_id: org, name: "Grossiste volume" }).select("id").single();
   ids.customer = customer!.id;
   ids.supplier = supplier!.id;
+  // More customers than the cart preloads (P5): 205 + one sorting after all of them.
+  const many = Array.from({ length: 205 }, (_, i) => ({ organization_id: org, name: `Client volume ${String(i).padStart(3, "0")}` }));
+  const { error: manyError } = await api.from("customers").insert(many);
+  expect(manyError).toBeNull();
+  const { data: last } = await api.from("customers").insert({ organization_id: org, name: "Zaïneb Zarrouk", phone: "+216 98 765 432" }).select("id").single();
+  ids.lastCustomer = last!.id;
 
   const productId = await rpc<string>(api, "create_product", {
     p_organization_id: org,
@@ -144,4 +150,21 @@ test("the supplier account pages its receipts and its payments separately", asyn
   await expect(page).toHaveURL(/ppage=2/);
   await expect(page.getByRole("navigation", { name: "Pagination des paiements" })).toContainText("Page 2 sur 2");
   await expect(page.getByRole("navigation", { name: "Pagination des réceptions" })).toContainText("Page 1 sur 2");
+});
+
+test("the cart finds any customer, beyond the ones it preloads", async ({ page }) => {
+  await signIn(page, owner);
+  await page.goto("/app/sales/new");
+  const select = page.getByLabel("Client", { exact: true });
+  await expect(select.locator(`option[value="${ids.lastCustomer}"]`)).toHaveCount(0); // not preloaded
+  await page.getByLabel("Rechercher un client").fill("zaineb"); // no accent typed
+  await page.getByRole("button", { name: /Zaïneb Zarrouk/ }).click();
+  await expect(select).toHaveValue(ids.lastCustomer as string);
+
+  // A draft keeps that customer when reopened, although she is not preloaded.
+  await pickVariant(page, "volume", /Article volume/);
+  await page.getByRole("button", { name: "Enregistrer en brouillon" }).click();
+  await expect(page.getByText(/Brouillon enregistré/)).toBeVisible();
+  await page.reload();
+  await expect(page.getByLabel("Client", { exact: true })).toHaveValue(ids.lastCustomer as string);
 });

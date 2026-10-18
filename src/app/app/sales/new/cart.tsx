@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useId, useMemo, useState, useTransition } from "react";
+import { useActionState, useId, useMemo, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { SelectField, TextField } from "@/components/ui/field";
 import { Alert, ActionMessage } from "@/components/ui/layout";
@@ -9,7 +9,7 @@ import { initialActionState } from "@/lib/actions";
 import { variantLabel } from "@/lib/domain/catalog";
 import { formatTnd, formatTndInput, parseTnd } from "@/lib/domain/money";
 import { formatBps, parsePercentToBps, priceSale } from "@/lib/domain/pricing";
-import { finalizeSaleAction, quickCreateCustomerAction, saveDraftAction } from "@/app/_actions/sales";
+import { finalizeSaleAction, quickCreateCustomerAction, saveDraftAction, searchCustomersAction } from "@/app/_actions/sales";
 import type { VariantSearchResult } from "@/app/_actions/stock";
 import { VariantPicker } from "@/app/app/stock/_components/variant-picker";
 import { fr } from "@/i18n/fr";
@@ -34,6 +34,7 @@ export function Cart({
   locations,
   methods,
   customers: initialCustomers,
+  customerSearch = false,
   maxDiscountBps,
   draft,
 }: {
@@ -42,6 +43,8 @@ export function Cart({
   locations: Option[];
   methods: Method[];
   customers: Option[];
+  /** The shop has more customers than the dropdown preloads: offer a search. */
+  customerSearch?: boolean;
   /** null = no limit (owner/manager). */
   maxDiscountBps: number | null;
   draft?: { saleId: string; locationId: string; customerId: string | null; note: string; orderDiscount: number; lines: CartLine[] };
@@ -62,6 +65,31 @@ export function Cart({
   const [received, setReceived] = useState("");
   const [newCustomer, setNewCustomer] = useState({ open: false, name: "", phone: "", error: "" });
   const [creating, startCreate] = useTransition();
+  const [customerQuery, setCustomerQuery] = useState("");
+  const [customerResults, setCustomerResults] = useState<{ id: string; name: string; phone: string | null }[] | null>(null);
+  const customerTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const customerRequest = useRef(0);
+
+  function searchCustomers(value: string) {
+    setCustomerQuery(value);
+    if (customerTimer.current) clearTimeout(customerTimer.current);
+    if (value.trim().length < 2) {
+      setCustomerResults(null);
+      return;
+    }
+    const request = ++customerRequest.current;
+    customerTimer.current = setTimeout(async () => {
+      const found = await searchCustomersAction(organizationId, value);
+      if (request === customerRequest.current) setCustomerResults(found);
+    }, 250);
+  }
+
+  function chooseCustomer(customer: { id: string; name: string }) {
+    setCustomers((list) => (list.some((c) => c.id === customer.id) ? list : [{ id: customer.id, name: customer.name }, ...list]));
+    setCustomerId(customer.id);
+    setCustomerQuery("");
+    setCustomerResults(null);
+  }
 
   function add(v: VariantSearchResult) {
     setLines((current) => {
@@ -217,6 +245,32 @@ export function Cart({
             />
           ) : null}
           <div className="space-y-2">
+            {customerSearch ? (
+              <div className="space-y-1">
+                <TextField
+                  id={`${id}-customer-search`}
+                  label={t.searchCustomer}
+                  hint={t.searchCustomerHint}
+                  type="search"
+                  autoComplete="off"
+                  value={customerQuery}
+                  onChange={(e) => searchCustomers(e.target.value)}
+                />
+                {customerResults ? (
+                  <ul aria-live="polite" className="divide-y divide-border rounded-lg border border-border bg-surface">
+                    {customerResults.length === 0 ? <li className="p-2 text-sm text-muted">{t.noCustomerFound}</li> : null}
+                    {customerResults.map((c) => (
+                      <li key={c.id}>
+                        <button type="button" onClick={() => chooseCustomer(c)} className="flex min-h-11 w-full items-center justify-between gap-2 px-3 text-start text-sm hover:bg-background">
+                          <span className="font-medium">{c.name}</span>
+                          {c.phone ? <span className="text-muted">{c.phone}</span> : null}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ) : null}
             <SelectField
               id={`${id}-customer`}
               label={t.customer}

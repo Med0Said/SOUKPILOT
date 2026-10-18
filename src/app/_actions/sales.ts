@@ -219,6 +219,20 @@ export async function quickCreateCustomerAction(
   return { ok: true, id: data.id, name: data.name };
 }
 
+/** Active customers by name (accents ignored) or phone, for the cart (P5). */
+export async function searchCustomersAction(organizationId: string, query: string): Promise<{ id: string; name: string; phone: string | null }[]> {
+  const q = String(query ?? "").trim().slice(0, 60);
+  if (!isUuid(organizationId) || q.length < 2) return [];
+  if (!(await authorize(organizationId, "sales.sell"))) return [];
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.rpc("search_customers", { p_organization_id: organizationId, p_query: q, p_limit: 20 });
+  if (error) {
+    failure("customer.search_failed", error);
+    return [];
+  }
+  return (data ?? []).filter((c) => c.is_active).map((c) => ({ id: c.customer_id, name: c.name, phone: c.phone }));
+}
+
 export async function savePaymentMethodAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const raw = formDataToObject(formData);
   const parsed = paymentMethodSchema.safeParse(raw);
