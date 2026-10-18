@@ -9,6 +9,7 @@ import { formatDateTime } from "@/lib/format";
 import { Alert, Breadcrumbs, Card, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 import { must } from "@/lib/server/query";
+import { isUuid } from "@/lib/validation/ids";
 
 export const metadata: Metadata = { title: fr.stock.nav.receipts };
 
@@ -21,7 +22,7 @@ export default async function ReceiptPage({
 }) {
   const { receiptId } = await params;
   const { created } = await searchParams;
-  if (!/^[0-9a-f-]{36}$/i.test(receiptId)) notFound();
+  if (!isUuid(receiptId)) notFound();
   const context = await requireOrgContext();
   const orgId = context.membership.organizationId;
   if (!hasPermission(context, "stock.receive")) return <Alert tone="error">{fr.catalog.forbidden}</Alert>;

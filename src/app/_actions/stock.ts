@@ -27,10 +27,10 @@ import {
   toQuantityLines,
   transferSchema,
 } from "@/lib/validation/stock";
+import { isUuid } from "@/lib/validation/ids";
 
 const FORBIDDEN: ActionState = { status: "error", message: messageForDbError({ message: "forbidden" }) };
 const INVALID: ActionState = { status: "error", message: messageForDbError({ message: "invalid_parameter" }) };
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function failure(event: string, error: { message?: string; code?: string; details?: string | null }, fields = {}): ActionState {
   if (!isKnownDbError(error)) logger.error(event, { ...fields, code: error.code, message: error.message });
@@ -81,7 +81,7 @@ export async function searchVariantsAction(
   query: string,
   locationId: string | null,
 ): Promise<VariantSearchResult[]> {
-  if (!UUID.test(organizationId) || (locationId && !UUID.test(locationId))) return [];
+  if (!isUuid(organizationId) || (locationId && !isUuid(locationId))) return [];
   const q = query.trim().slice(0, 100);
   if (q.length < 1) return [];
   if (!(await authorize(organizationId, "stock.view"))) return [];
@@ -175,7 +175,7 @@ export async function reviewAdjustmentAction(_prev: ActionState, formData: FormD
   await requireUser();
   const adjustmentId = String(formData.get("adjustmentId") ?? "");
   const decision = formData.get("decision");
-  if (!UUID.test(adjustmentId) || (decision !== "approve" && decision !== "reject")) return INVALID;
+  if (!isUuid(adjustmentId) || (decision !== "approve" && decision !== "reject")) return INVALID;
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.rpc("review_stock_adjustment", {
@@ -250,7 +250,7 @@ export async function countTransitionAction(_prev: ActionState, formData: FormDa
   await requireUser();
   const countId = String(formData.get("countId") ?? "");
   const step = formData.get("step");
-  if (!UUID.test(countId)) return INVALID;
+  if (!isUuid(countId)) return INVALID;
 
   const supabase = await createSupabaseServerClient();
   let message: string;

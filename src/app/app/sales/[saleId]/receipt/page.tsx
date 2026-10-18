@@ -8,13 +8,14 @@ import { formatBps } from "@/lib/domain/pricing";
 import { formatDateTime } from "@/lib/format";
 import { fr } from "@/i18n/fr";
 import { PrintButton } from "./print-button";
+import { isUuid } from "@/lib/validation/ids";
 
 export const metadata: Metadata = { title: fr.sales.receipt.title };
 
 /** Internal receipt (ticket). Explicitly NOT a fiscal invoice. */
 export default async function ReceiptPage({ params }: { params: Promise<{ saleId: string }> }) {
   const { saleId } = await params;
-  if (!/^[0-9a-f-]{36}$/i.test(saleId)) notFound();
+  if (!isUuid(saleId)) notFound();
   const context = await requireOrgContext();
   const supabase = await createSupabaseServerClient();
   const data = await loadSale(supabase, context.membership.organizationId, saleId);

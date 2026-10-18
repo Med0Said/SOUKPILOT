@@ -9,6 +9,7 @@ import { logger } from "@/lib/logger";
 import { Alert, Badge, Breadcrumbs, Card, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 import { ProductEditForm, VariantEditor } from "./product-editors";
+import { isUuid } from "@/lib/validation/ids";
 
 export const metadata: Metadata = { title: fr.nav.catalog };
 
@@ -21,7 +22,7 @@ export default async function ProductPage({
 }) {
   const { productId } = await params;
   const { created } = await searchParams;
-  if (!/^[0-9a-f-]{36}$/i.test(productId)) notFound();
+  if (!isUuid(productId)) notFound();
 
   const context = await requireOrgContext();
   const orgId = context.membership.organizationId;

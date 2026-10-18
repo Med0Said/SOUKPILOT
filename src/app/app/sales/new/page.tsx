@@ -8,6 +8,7 @@ import { fr } from "@/i18n/fr";
 import { Cart, type CartLine } from "./cart";
 import { formatBps } from "@/lib/domain/pricing";
 import { must } from "@/lib/server/query";
+import { isUuid } from "@/lib/validation/ids";
 
 export const metadata: Metadata = { title: fr.sales.cart.title };
 
@@ -25,7 +26,7 @@ export default async function NewSalePage({ searchParams }: { searchParams: Prom
   ]);
 
   let draft: Parameters<typeof Cart>[0]["draft"];
-  if (draftId && /^[0-9a-f-]{36}$/i.test(draftId)) {
+  if (draftId && isUuid(draftId)) {
     const sale = must(await supabase
       .from("sales")
       .select("id, status, location_id, customer_id, note, order_discount_millimes")

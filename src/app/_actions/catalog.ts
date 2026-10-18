@@ -28,6 +28,7 @@ import {
 } from "@/lib/validation/catalog";
 import { analyzeImportFile, identifiersToCheck, type ImportAnalysis } from "@/lib/domain/catalog-import";
 import { decodeCsvBytes } from "@/lib/domain/csv";
+import { isUuid } from "@/lib/validation/ids";
 
 const FORBIDDEN: ActionState = { status: "error", message: messageForDbError({ message: "forbidden" }) };
 const INVALID: ActionState = { status: "error", message: "Formulaire invalide. Rechargez la page." };
@@ -272,7 +273,7 @@ export async function previewImportAction(_prev: ImportPreviewState, formData: F
 
 export async function commitImportAction(prev: ImportPreviewState, formData: FormData): Promise<ImportPreviewState> {
   const batchId = String(formData.get("batchId") ?? "");
-  if (!/^[0-9a-f-]{36}$/i.test(batchId)) return INVALID;
+  if (!isUuid(batchId)) return INVALID;
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.rpc("commit_catalog_import", { p_batch_id: batchId });

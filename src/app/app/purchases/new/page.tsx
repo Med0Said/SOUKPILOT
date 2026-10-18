@@ -9,6 +9,7 @@ import { CurrencyConverter } from "@/components/integrations/currency-converter"
 import { enabledIntegrations } from "@/lib/server/integrations";
 import { PurchaseOrderForm, type PoLine } from "../_components/purchase-order-form";
 import { must } from "@/lib/server/query";
+import { isUuid } from "@/lib/validation/ids";
 
 export const metadata: Metadata = { title: fr.purchases.form.title };
 
@@ -26,7 +27,7 @@ export default async function NewPurchaseOrderPage({ searchParams }: { searchPar
   ]);
 
   let draft: Parameters<typeof PurchaseOrderForm>[0]["draft"];
-  if (draftId && /^[0-9a-f-]{36}$/i.test(draftId)) {
+  if (draftId && isUuid(draftId)) {
     const po = must(await supabase
       .from("purchase_orders")
       .select("id, status, supplier_id, location_id, expected_date, reference, note")

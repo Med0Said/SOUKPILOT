@@ -14,6 +14,7 @@ import { Alert, Badge, Breadcrumbs, Card, PageHeader } from "@/components/ui/lay
 import { fr } from "@/i18n/fr";
 import { PoTransitions, ReceiveForm } from "./po-forms";
 import { must } from "@/lib/server/query";
+import { isUuid } from "@/lib/validation/ids";
 
 export const metadata: Metadata = { title: fr.nav.purchases };
 
@@ -26,7 +27,7 @@ export default async function PurchaseOrderPage({
 }) {
   const { purchaseOrderId } = await params;
   const { saved, received } = await searchParams;
-  if (!/^[0-9a-f-]{36}$/i.test(purchaseOrderId)) notFound();
+  if (!isUuid(purchaseOrderId)) notFound();
   const context = await requireOrgContext();
   const orgId = context.membership.organizationId;
   const tz = context.membership.timezone;

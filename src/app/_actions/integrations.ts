@@ -18,13 +18,13 @@ import type { IntegrationKey } from "@/lib/supabase/database.types";
 import { logger } from "@/lib/logger";
 import type { ActionState } from "@/lib/actions";
 import { fr } from "@/i18n/fr";
+import { isUuid } from "@/lib/validation/ids";
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const KEYS: readonly IntegrationKey[] = ["barcode_lookup", "exchange_rates"];
 
 /** Asks the database whether this call may go out (switch + quotas). */
 async function gate(organizationId: string, integration: IntegrationKey): Promise<"ok" | "disabled" | "rate_limited" | "forbidden"> {
-  if (!UUID.test(organizationId) || !(await membershipFor(organizationId))) return "forbidden";
+  if (!isUuid(organizationId) || !(await membershipFor(organizationId))) return "forbidden";
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.rpc("consume_integration_call", { p_organization_id: organizationId, p_integration: integration });
   if (!error) return "ok";
@@ -38,7 +38,7 @@ export async function setIntegrationAction(_prev: ActionState, formData: FormDat
   const organizationId = String(formData.get("organizationId") ?? "");
   const integration = String(formData.get("integration") ?? "") as IntegrationKey;
   const enabled = formData.get("enabled") === "true";
-  if (!UUID.test(organizationId) || !KEYS.includes(integration)) return { status: "error", message: messageForDbError({ message: "invalid_integration" }) };
+  if (!isUuid(organizationId) || !KEYS.includes(integration)) return { status: "error", message: messageForDbError({ message: "invalid_integration" }) };
   const context = await membershipFor(organizationId);
   if (!context || context.membership.role !== "owner") return { status: "error", message: messageForDbError({ message: "forbidden" }) };
 

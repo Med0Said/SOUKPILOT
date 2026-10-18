@@ -17,10 +17,10 @@ import type { ActionState } from "@/lib/actions";
 import { fieldErrorsFrom, formDataToObject } from "@/lib/validation/schemas";
 import { purchaseOrderSchema, receivePurchaseOrderSchema, supplierPaymentSchema } from "@/lib/validation/purchasing";
 import { fr } from "@/i18n/fr";
+import { isUuid } from "@/lib/validation/ids";
 
 const FORBIDDEN: ActionState = { status: "error", message: messageForDbError({ message: "forbidden" }) };
 const INVALID: ActionState = { status: "error", message: messageForDbError({ message: "invalid_parameter" }) };
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function failure(event: string, error: { message?: string; code?: string; details?: string | null }, fields = {}): ActionState {
   if (!isKnownDbError(error)) logger.error(event, { ...fields, code: error.code, message: error.message });
@@ -55,7 +55,7 @@ function revalidatePurchasing(poId?: string) {
 
 /** Current purchase costs to pre-fill order lines (owner/manager only, RLS). */
 export async function variantCostsAction(organizationId: string, variantIds: string[]): Promise<Record<string, number | null>> {
-  if (!UUID.test(organizationId) || !variantIds.every((v) => UUID.test(v)) || variantIds.length > 100) return {};
+  if (!isUuid(organizationId) || !variantIds.every((v) => isUuid(v)) || variantIds.length > 100) return {};
   if (!(await canPurchase(organizationId))) return {};
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
@@ -94,7 +94,7 @@ export async function purchaseOrderTransitionAction(_prev: ActionState, formData
   await requireUser();
   const id = String(formData.get("purchaseOrderId") ?? "");
   const step = formData.get("step");
-  if (!UUID.test(id)) return INVALID;
+  if (!isUuid(id)) return INVALID;
   const supabase = await createSupabaseServerClient();
   let message: string;
   if (step === "place") {

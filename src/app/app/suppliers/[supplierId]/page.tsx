@@ -12,6 +12,7 @@ import { fr } from "@/i18n/fr";
 import { SupplierForm } from "../supplier-form";
 import { SupplierPaymentForm } from "./supplier-payment-form";
 import { must } from "@/lib/server/query";
+import { isUuid } from "@/lib/validation/ids";
 
 export const metadata: Metadata = { title: fr.nav.suppliers };
 
@@ -21,7 +22,7 @@ function todayIn(timeZone: string): string {
 
 export default async function SupplierPage({ params }: { params: Promise<{ supplierId: string }> }) {
   const { supplierId } = await params;
-  if (!/^[0-9a-f-]{36}$/i.test(supplierId)) notFound();
+  if (!isUuid(supplierId)) notFound();
   const context = await requireOrgContext();
   const orgId = context.membership.organizationId;
   const tz = context.membership.timezone;

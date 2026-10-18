@@ -27,6 +27,7 @@ import {
   toSaleRpcPayments,
 } from "@/lib/validation/sales";
 import { fr } from "@/i18n/fr";
+import { isUuid } from "@/lib/validation/ids";
 
 const FORBIDDEN: ActionState = { status: "error", message: messageForDbError({ message: "forbidden" }) };
 
@@ -112,7 +113,7 @@ export async function saveDraftAction(_prev: ActionState, formData: FormData): P
 export async function cancelDraftAction(formData: FormData): Promise<void> {
   await requireUser();
   const saleId = String(formData.get("saleId") ?? "");
-  if (!/^[0-9a-f-]{36}$/i.test(saleId)) redirect("/app/sales");
+  if (!isUuid(saleId)) redirect("/app/sales");
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.rpc("cancel_sale_draft", { p_sale_id: saleId });
   if (error && !isKnownDbError(error)) logger.error("sale.draft_cancel_failed", { saleId, code: error.code });

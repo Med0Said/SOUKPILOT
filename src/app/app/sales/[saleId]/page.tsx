@@ -13,6 +13,7 @@ import { Alert, Breadcrumbs, Card, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 import { PaymentForm, ReturnForm } from "./sale-forms";
 import { must } from "@/lib/server/query";
+import { isUuid } from "@/lib/validation/ids";
 
 export const metadata: Metadata = { title: fr.nav.sales };
 
@@ -25,7 +26,7 @@ export default async function SalePage({
 }) {
   const { saleId } = await params;
   const { created, returned } = await searchParams;
-  if (!/^[0-9a-f-]{36}$/i.test(saleId)) notFound();
+  if (!isUuid(saleId)) notFound();
   const context = await requireOrgContext();
   const orgId = context.membership.organizationId;
   const tz = context.membership.timezone;

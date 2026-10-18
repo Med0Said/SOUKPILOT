@@ -10,12 +10,13 @@ import { Badge, Breadcrumbs, Card, EmptyState, PageHeader } from "@/components/u
 import { fr } from "@/i18n/fr";
 import { CustomerForm } from "../customer-form";
 import { must } from "@/lib/server/query";
+import { isUuid } from "@/lib/validation/ids";
 
 export const metadata: Metadata = { title: fr.nav.customers };
 
 export default async function CustomerPage({ params }: { params: Promise<{ customerId: string }> }) {
   const { customerId } = await params;
-  if (!/^[0-9a-f-]{36}$/i.test(customerId)) notFound();
+  if (!isUuid(customerId)) notFound();
   const context = await requireOrgContext();
   const orgId = context.membership.organizationId;
   const t = fr.customers;

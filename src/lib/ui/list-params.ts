@@ -3,9 +3,9 @@
  * from the address bar, so every value is validated and defaulted here; the
  * database functions validate again (limits, unknown sorts fall back).
  */
+import { isUuid } from "@/lib/validation/ids";
 
 export const MAX_PAGE = 1000;
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function parsePage(value: string | undefined): number {
   const n = Number.parseInt(value ?? "1", 10);
@@ -17,7 +17,7 @@ export function parseChoice<T extends string>(value: string | undefined, choices
 }
 
 export function parseUuid(value: string | undefined): string | null {
-  return value && UUID.test(value) ? value : null;
+  return isUuid(value) ? value : null;
 }
 
 /** A real calendar day "YYYY-MM-DD" (rejects 2026-02-30), else null. */

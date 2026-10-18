@@ -2,7 +2,7 @@
  * Phase 1 UI foundation: theme switch, collapsible sidebar, confirmation
  * dialog (cancel / Esc / keyboard), breadcrumbs. Runs under the console/CSP guard.
  */
-import { expect, test } from "./fixtures";
+import { allowNotFoundResponses, expect, test } from "./fixtures";
 import { clickAndConfirm, createOrganization, newAccount, pickVariant, signIn, signUpAndConfirm } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -78,4 +78,30 @@ test("breadcrumbs lead back to the list", async ({ page }) => {
   await expect(crumbs.getByText(product)).toHaveAttribute("aria-current", "page");
   await crumbs.getByRole("link", { name: "Articles" }).click();
   await expect(page).toHaveURL(/\/app\/catalog$/);
+});
+
+test("a malformed id in a detail URL is a plain 404, never an error screen", async ({ page }) => {
+  allowNotFoundResponses();
+  await signIn(page, owner);
+  // 36 characters that a loose /^[0-9a-f-]{36}$/ check lets through to Postgres.
+  const bad = "-".repeat(36);
+  for (const path of [
+    `/app/catalog/${bad}`,
+    `/app/customers/${bad}`,
+    `/app/sales/${bad}`,
+    `/app/sales/${bad}/receipt`,
+    `/app/purchases/${bad}`,
+    `/app/suppliers/${bad}`,
+    `/app/stock/counts/${bad}`,
+    `/app/stock/receipts/${bad}`,
+  ]) {
+    const response = await page.goto(path);
+    expect(response?.status(), path).toBe(404);
+    await expect(page.getByRole("heading", { name: "Page introuvable." })).toBeVisible();
+  }
+  // Drafts: a malformed id is ignored (empty form), not an error.
+  for (const path of [`/app/sales/new?draft=${bad}`, `/app/purchases/new?draft=${bad}`]) {
+    const response = await page.goto(path);
+    expect(response?.status(), path).toBe(200);
+  }
 });

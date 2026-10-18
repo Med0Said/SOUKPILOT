@@ -8,12 +8,13 @@ import { Badge, Breadcrumbs, Card, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
 import { CountSheet, CountTransitions } from "./count-sheet";
 import { must } from "@/lib/server/query";
+import { isUuid } from "@/lib/validation/ids";
 
 export const metadata: Metadata = { title: fr.stock.nav.counts };
 
 export default async function CountPage({ params }: { params: Promise<{ countId: string }> }) {
   const { countId } = await params;
-  if (!/^[0-9a-f-]{36}$/i.test(countId)) notFound();
+  if (!isUuid(countId)) notFound();
   const context = await requireOrgContext();
   const orgId = context.membership.organizationId;
   const canReview = hasPermission(context, "stock.count.manage");
