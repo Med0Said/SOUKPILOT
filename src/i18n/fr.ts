@@ -1,4 +1,5 @@
 /** French UI strings. Keys are grouped by screen/module. */
+import { frErrors } from "./fr-errors";
 const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
 
 export const fr = {
@@ -774,11 +775,7 @@ export const fr = {
     // "Revenir", not "Annuler": the action being confirmed may itself be a
     // cancellation ("Annuler la commande").
     confirm: { title: "Confirmation", cancel: "Revenir", confirm: "Confirmer" },
-    error: {
-      title: "Une erreur est survenue",
-      body: "La page n'a pas pu être chargée. Vos données ne sont pas perdues : réessayez dans un instant.",
-      retry: "Réessayer",
-    },
+    error: { title: frErrors.title, body: frErrors.body, retry: frErrors.retry },
   },
   lists: {
     sortBy: "Trier par",

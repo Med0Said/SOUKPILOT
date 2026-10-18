@@ -3,7 +3,8 @@
 import { RefreshCw, TriangleAlert } from "lucide-react";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { fr } from "@/i18n/fr";
+// Only the error strings: this boundary is its own client bundle.
+import { frErrors } from "@/i18n/fr-errors";
 
 /**
  * Consistent failure state for app pages. Shows no technical detail (it may
@@ -21,12 +22,12 @@ export default function AppError({ error, retry }: { error: Error & { digest?: s
       <span className="inline-flex size-12 items-center justify-center rounded-full bg-danger-soft text-danger">
         <TriangleAlert aria-hidden="true" className="size-6" />
       </span>
-      <h1 className="text-xl font-semibold">{fr.ui.error.title}</h1>
-      <p className="text-sm text-muted">{fr.ui.error.body}</p>
-      {error.digest ? <p className="text-xs text-muted">Réf. {error.digest}</p> : null}
+      <h1 className="text-xl font-semibold">{frErrors.title}</h1>
+      <p className="text-sm text-muted">{frErrors.body}</p>
+      {error.digest ? <p className="text-xs text-muted">{frErrors.reference(error.digest)}</p> : null}
       <Button onClick={() => retry()}>
         <RefreshCw aria-hidden="true" className="size-4" />
-        {fr.ui.error.retry}
+        {frErrors.retry}
       </Button>
     </div>
   );

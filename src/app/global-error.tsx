@@ -2,7 +2,8 @@
 
 import { RefreshCw, TriangleAlert } from "lucide-react";
 import { DEFAULT_LOCALE, localeDirection } from "@/i18n/config";
-import { fr } from "@/i18n/fr";
+// Only the error strings: the full dictionary would add ~16 KB to this bundle.
+import { frErrors } from "@/i18n/fr-errors";
 import "./globals.css";
 
 /**
@@ -15,21 +16,21 @@ export default function GlobalError({ error, retry }: { error: Error & { digest?
   return (
     <html lang={DEFAULT_LOCALE} dir={localeDirection(DEFAULT_LOCALE)} data-theme="system">
       <body className="min-h-dvh antialiased">
-        <title>{`${fr.ui.error.title} · ${fr.app.name}`}</title>
+        <title>{`${frErrors.title} · ${frErrors.appName}`}</title>
         <main role="alert" className="mx-auto flex max-w-md flex-col items-center gap-3 px-4 py-24 text-center">
           <span className="inline-flex size-12 items-center justify-center rounded-full bg-danger-soft text-danger">
             <TriangleAlert aria-hidden="true" className="size-6" />
           </span>
-          <h1 className="text-xl font-semibold">{fr.ui.error.title}</h1>
-          <p className="text-sm text-muted">{fr.ui.error.body}</p>
-          {error.digest ? <p className="text-xs text-muted">Réf. {error.digest}</p> : null}
+          <h1 className="text-xl font-semibold">{frErrors.title}</h1>
+          <p className="text-sm text-muted">{frErrors.body}</p>
+          {error.digest ? <p className="text-xs text-muted">{frErrors.reference(error.digest)}</p> : null}
           <button
             type="button"
             onClick={() => retry()}
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
           >
             <RefreshCw aria-hidden="true" className="size-4" />
-            {fr.ui.error.retry}
+            {frErrors.retry}
           </button>
         </main>
       </body>
