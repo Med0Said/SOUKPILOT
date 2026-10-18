@@ -1,0 +1,130 @@
+# Quality gates from CONSTRAINTS.md, on every pull request and push to master.
+# Three parallel jobs; each one fails the run on its own. No production secret
+# is used anywhere: the databases are throwaway containers.
+name: CI
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, types, floor, unit + DB tests (PGlite), coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The floor guard diffs against the merge base and reads commit trailers.
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Lint (zero errors, zero warnings)
+        run: npm run lint -- --max-warnings=0
+      - name: Types (incl. DB type contract)
+        run: npm run typecheck
+      - name: Floor guard (CONSTRAINTS.md)
+        env:
+          # PR: diff against the target branch. Push: against the previous tip.
+          BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
+        run: |
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$BASE" 2>/dev/null; then
+            BASE="HEAD~1"
+          fi
+          node scripts/constraints/floor-guard.mjs --base "$BASE"
+      - name: Unit + DB tests (PGlite) with coverage thresholds
+        run: npm run test:coverage
+      - name: SQL function coverage
+        run: node scripts/constraints/sql-coverage.mjs
+      - name: Every E2E spec uses the console/CSP guard
+        run: node scripts/constraints/e2e-guard.mjs
+      - name: Production dependencies (no high vulnerability)
+        run: npm audit --omit=dev --audit-level=high
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 14
+
+  db-postgres:
+    name: DB tests on PostgreSQL 17
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          # Throwaway container reachable only from this job; not a real credential.
+          POSTGRES_PASSWORD: ${{ secrets.CI_DB_PASSWORD || 'ci-throwaway' }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: DB test suite on a real server (includes concurrency tests)
+        run: npm run test:db:pg
+        env:
+          TEST_DATABASE_URL: postgres://postgres:${{ secrets.CI_DB_PASSWORD || 'ci-throwaway' }}@localhost:5432/postgres
+
+  e2e:
+    name: E2E (production build + local Supabase), accessibility, bundle budget
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Start a local Supabase stack (all migrations applied)
+        run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime,storage-api,postgres-meta
+      - name: Point the app at it
+        run: |
+          eval "$(npx supabase status -o env | grep -E '^(API_URL|PUBLISHABLE_KEY)=')"
+          echo "::add-mask::$PUBLISHABLE_KEY"
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$PUBLISHABLE_KEY"
+            echo "NEXT_PUBLIC_SITE_URL=http://localhost:3100"
+          } >> "$GITHUB_ENV"
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: E2E (every spec under the console/CSP guard, incl. accessibility)
+        run: npm run test:e2e
+      - name: Client JavaScript budget
+        run: node scripts/constraints/bundle-budget.mjs .next-e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 14
+      - name: Stop Supabase
+        if: always()
+        run: npx supabase stop --no-backup

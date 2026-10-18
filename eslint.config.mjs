@@ -16,6 +16,8 @@ const eslintConfig = defineConfig([
     ".next-e2e/**",
     "test-results/**",
     "playwright-report/**",
+    // Generated coverage report (npm run test:coverage).
+    "coverage/**",
   ]),
 ]);
 

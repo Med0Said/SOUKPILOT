@@ -11,6 +11,23 @@ export default defineConfig({
     },
   },
   test: {
+    // `npm run test:coverage` — thresholds and their reasons: CONSTRAINTS.md.
+    coverage: {
+      provider: "v8",
+      include: ["src/lib/**/*.ts"],
+      exclude: ["src/lib/**/*.test.ts", "src/lib/supabase/**", "src/lib/server/**", "src/lib/auth/session.ts", "src/lib/auth/organization.ts"],
+      reporter: ["text-summary", "json-summary", "lcov"],
+      reportsDirectory: "coverage",
+      // Ratchet: measured 2026-10-18 minus 0.5 point, rounded down. Raise when
+      // coverage improves; never lower to make a change pass (CONSTRAINTS.md).
+      thresholds: {
+        lines: 89,
+        statements: 87,
+        branches: 82,
+        functions: 80,
+        "src/lib/domain/**": { lines: 94, statements: 92, branches: 84, functions: 87 },
+      },
+    },
     projects: [
       {
         extends: true,

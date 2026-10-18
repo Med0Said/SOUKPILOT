@@ -19,7 +19,11 @@
     "db:types": "supabase gen types typescript --local > src/lib/supabase/database.generated.ts",
     "test:db:pg": "node scripts/test-db-pg.mjs",
     "test:e2e": "playwright test",
-    "db:migrate": "supabase migration up --local"
+    "db:migrate": "supabase migration up --local",
+    "test:coverage": "vitest run --coverage",
+    "check:fast": "npm run lint && npm run typecheck && node scripts/constraints/floor-guard.mjs",
+    "check:task": "npm run check:fast && npm run test:coverage && node scripts/constraints/sql-coverage.mjs && node scripts/constraints/e2e-guard.mjs",
+    "check:full": "npm run check:task && npm run test:db:pg && npm run test:e2e && node scripts/constraints/bundle-budget.mjs .next-e2e && npm audit --omit=dev --audit-level=high"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -39,6 +43,7 @@
     "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "5.0.4",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
     "pg": "^8.23.1",
