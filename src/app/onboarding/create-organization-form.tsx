@@ -5,7 +5,7 @@ import { SelectField, TextField } from "@/components/ui/field";
 import { ActionMessage } from "@/components/ui/layout";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { initialActionState } from "@/lib/actions";
-import { COMMON_TIME_ZONES } from "@/lib/validation/schemas";
+import { COMMON_TIME_ZONES } from "@/lib/validation/time-zones";
 import { createOrganizationAction } from "@/app/_actions/organizations";
 import { fr } from "@/i18n/fr";
 

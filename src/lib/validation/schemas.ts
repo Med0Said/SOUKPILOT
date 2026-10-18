@@ -65,8 +65,7 @@ export const timeZoneSchema = z
   .max(64)
   .refine(isValidTimeZone, "Fuseau horaire invalide.");
 
-/** Short list offered in the UI; any valid IANA zone is accepted server-side. */
-export const COMMON_TIME_ZONES = ["Africa/Tunis", "Africa/Algiers", "Africa/Tripoli", "Europe/Paris"] as const;
+export { COMMON_TIME_ZONES } from "./time-zones";
 
 const organizationNameSchema = z
   .string()
