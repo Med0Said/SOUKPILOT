@@ -88,7 +88,9 @@ for (const { file, text } of added) {
 // 2b. A test file deleted, or an assertion removed from a test file that still exists.
 for (const f of deleted) if (isTest(f)) flag('test-deleted', f, 'file deleted');
 for (const { file, text } of removed) {
-  if (isTest(file) && !deleted.includes(file) && /\b(expect|assert|should)\b/.test(text)) {
+  // An assertion is a call (`expect(`, `assert(`, `.should`), not the word: an edited
+  // `import { expect, … }` line is not a removed assertion.
+  if (isTest(file) && !deleted.includes(file) && /\b(expect|assert)\s*\(|\.should\b/.test(text)) {
     flag('assertion-removed', file, text);
   }
 }
