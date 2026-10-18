@@ -275,3 +275,29 @@ describe("product ids", () => {
     expect(row.id).toBe(await productId(cafe));
   });
 });
+
+describe("search functions can be inlined by the planner (audit P3)", () => {
+  // A SET clause (e.g. search_path) stops Postgres from inlining an SQL
+  // function, so the query is planned without the caller's constants: 3x
+  // slower at 10 000 articles. These are SECURITY INVOKER (RLS applies) and
+  // use schema-qualified names only; SECURITY DEFINER functions keep their SET.
+  const INVOKER_SEARCH = ["search_products", "search_variants", "stock_overview", "search_customers", "search_sales", "global_search"];
+
+  it("read-only search functions carry no SET clause and stay SECURITY INVOKER", async () => {
+    const rows = await db.query<{ proname: string; proconfig: string[] | null; prosecdef: boolean; provolatile: string }>(
+      "select proname, proconfig, prosecdef, provolatile from pg_proc where pronamespace = 'public'::regnamespace and proname = any($1) order by proname",
+      [INVOKER_SEARCH],
+    );
+    expect(rows.rows.map((r) => r.proname)).toEqual([...INVOKER_SEARCH].sort());
+    for (const r of rows.rows) expect({ fn: r.proname, config: r.proconfig, definer: r.prosecdef, volatility: r.provolatile }).toEqual({ fn: r.proname, config: null, definer: false, volatility: "s" });
+  });
+
+  it("every SECURITY DEFINER function still pins search_path", async () => {
+    const rows = await db.query<{ proname: string }>(
+      `select p.proname from pg_proc p
+       where p.pronamespace in ('public'::regnamespace, 'private'::regnamespace) and p.prosecdef
+         and not coalesce(p.proconfig @> array['search_path=""'], false)`,
+    );
+    expect(rows.rows).toEqual([]);
+  });
+});
