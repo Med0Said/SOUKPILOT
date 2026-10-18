@@ -10,6 +10,14 @@ import { expect, test as base } from "@playwright/test";
 export function allowNotFoundResponses(): void {
   base.info().annotations.push({ type: "allow-404" });
 }
+/**
+ * For a test that deliberately triggers a server error: tolerates only the
+ * browser's "status of 500" message and React's production notice for a
+ * server-component error (#441) — never CSP violations or page exceptions.
+ */
+export function allowServerErrorResponses(): void {
+  base.info().annotations.push({ type: "allow-500" });
+}
 export const test = base.extend<{ consoleGuard: void }>({
   consoleGuard: [
     async ({ page }, use) => {
@@ -20,7 +28,10 @@ export const test = base.extend<{ consoleGuard: void }>({
       });
       await use();
       const allow404 = base.info().annotations.some((a) => a.type === "allow-404");
-      const unexpected = problems.filter((p) => !(allow404 && /status of 404/.test(p)));
+      const allow500 = base.info().annotations.some((a) => a.type === "allow-500");
+      const unexpected = problems.filter(
+        (p) => !(allow404 && /status of 404/.test(p)) && !(allow500 && /^console\.error: (.*status of 500|Error: Minified React error #441)/.test(p)),
+      );
       expect(unexpected, "browser errors during the test").toEqual([]);
     },
     { auto: true },

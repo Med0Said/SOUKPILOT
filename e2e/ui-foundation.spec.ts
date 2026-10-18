@@ -2,7 +2,7 @@
  * Phase 1 UI foundation: theme switch, collapsible sidebar, confirmation
  * dialog (cancel / Esc / keyboard), breadcrumbs. Runs under the console/CSP guard.
  */
-import { allowNotFoundResponses, expect, test } from "./fixtures";
+import { allowNotFoundResponses, allowServerErrorResponses, expect, test } from "./fixtures";
 import { clickAndConfirm, createOrganization, newAccount, pickVariant, signIn, signUpAndConfirm } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -104,4 +104,16 @@ test("a malformed id in a detail URL is a plain 404, never an error screen", asy
     const response = await page.goto(path);
     expect(response?.status(), path).toBe(200);
   }
+});
+
+test("the error screen is in French, shows a reference, and its retry button works", async ({ page, baseURL }) => {
+  allowServerErrorResponses();
+  await signIn(page, owner);
+  await page.context().addCookies([{ name: "sp_test_fault", value: "1", url: baseURL as string }]);
+  await page.goto("/app/test-fault");
+  await expect(page.getByRole("heading", { name: "Une erreur est survenue" })).toBeVisible();
+  await expect(page.getByText(/^Réf\. \d+/)).toBeVisible();
+  await page.context().clearCookies({ name: "sp_test_fault" });
+  await page.getByRole("button", { name: "Réessayer" }).click();
+  await expect(page.getByRole("heading", { name: "Test fault cleared" })).toBeVisible();
 });

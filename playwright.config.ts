@@ -41,6 +41,8 @@ export default defineConfig({
       // Integrations answer from offline fixtures (src/lib/integrations/fixtures.ts):
       // tests never depend on third-party services.
       SP_FAKE_INTEGRATIONS: "1",
+      // Test-only fault page /app/test-fault (src/lib/server/test-hooks.ts).
+      SP_TEST_FAULTS: "1",
       NEXT_PUBLIC_SITE_URL: BASE_URL,
       NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321",
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "",

@@ -9,7 +9,9 @@ import { fr } from "@/i18n/fr";
  * Consistent failure state for app pages. Shows no technical detail (it may
  * contain internals); the digest lets support match the server log entry.
  */
-export default function AppError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+// Next 16 passes `retry` (re-fetches and re-renders the segment); the older
+// `reset` prop no longer exists, so a button wired to it did nothing.
+export default function AppError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   useEffect(() => {
     console.warn("SoukPilot page error", error.digest ?? "");
   }, [error]);
@@ -22,7 +24,7 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
       <h1 className="text-xl font-semibold">{fr.ui.error.title}</h1>
       <p className="text-sm text-muted">{fr.ui.error.body}</p>
       {error.digest ? <p className="text-xs text-muted">Réf. {error.digest}</p> : null}
-      <Button onClick={reset}>
+      <Button onClick={() => retry()}>
         <RefreshCw aria-hidden="true" className="size-4" />
         {fr.ui.error.retry}
       </Button>
