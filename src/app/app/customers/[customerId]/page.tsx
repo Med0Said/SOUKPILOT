@@ -7,6 +7,8 @@ import { formatTnd } from "@/lib/domain/money";
 import { balanceDue } from "@/lib/domain/pricing";
 import { formatDateTime } from "@/lib/format";
 import { Badge, Breadcrumbs, Card, EmptyState, PageHeader } from "@/components/ui/layout";
+import { Pagination } from "@/components/ui/list-controls";
+import { listHref, pageCount, parsePage } from "@/lib/ui/list-params";
 import { fr } from "@/i18n/fr";
 import { CustomerForm } from "../customer-form";
 import { must } from "@/lib/server/query";
@@ -14,8 +16,17 @@ import { isUuid } from "@/lib/validation/ids";
 
 export const metadata: Metadata = { title: fr.nav.customers };
 
-export default async function CustomerPage({ params }: { params: Promise<{ customerId: string }> }) {
+const PAGE_SIZE = 30;
+
+export default async function CustomerPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ customerId: string }>;
+  searchParams: Promise<{ page?: string }>;
+}) {
   const { customerId } = await params;
+  const page = parsePage((await searchParams).page);
   if (!isUuid(customerId)) notFound();
   const context = await requireOrgContext();
   const orgId = context.membership.organizationId;
@@ -30,18 +41,21 @@ export default async function CustomerPage({ params }: { params: Promise<{ custo
     .maybeSingle(), "customers.detail_load_failed", { organizationId: orgId });
   if (!customer) notFound();
 
-  const sales = must(await supabase
-    .from("sales")
-    .select("id, number, finalized_at, total_millimes, returned_millimes, paid_millimes")
-    .eq("organization_id", orgId)
-    .eq("customer_id", customerId)
-    .eq("status", "finalized")
-    .order("number", { ascending: false })
-    .limit(200), "customers.history_load_failed", { organizationId: orgId });
-  const balance = (sales ?? []).reduce(
-    (s, x) => s + balanceDue({ totalMillimes: x.total_millimes, returnedMillimes: x.returned_millimes, paidMillimes: x.paid_millimes }),
-    0,
-  );
+  const [salesResult, balancesResult] = await Promise.all([
+    supabase
+      .from("sales")
+      .select("id, number, finalized_at, total_millimes, returned_millimes, paid_millimes", { count: "exact" })
+      .eq("organization_id", orgId)
+      .eq("customer_id", customerId)
+      .eq("status", "finalized")
+      .order("number", { ascending: false })
+      .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1),
+    supabase.rpc("customer_balances", { p_organization_id: orgId }),
+  ]);
+  const sales = must(salesResult, "customers.history_load_failed", { organizationId: orgId });
+  const pages = pageCount(salesResult.count ?? 0, PAGE_SIZE);
+  // Over ALL the customer's sales (the history below is one page of them).
+  const balance = must(balancesResult, "customers.balance_load_failed", { organizationId: orgId }).find((b) => b.customer_id === customerId)?.balance_millimes ?? 0;
 
   return (
     <>
@@ -73,6 +87,12 @@ export default async function CustomerPage({ params }: { params: Promise<{ custo
               );
             })}
           </ul>
+          <Pagination
+            page={page}
+            pages={pages}
+            href={(n) => listHref(`/app/customers/${customerId}`, { page: n })}
+            label={fr.lists.paginationHistory}
+          />
         </Card>
         {hasPermission(context, "customers.manage") ? (
           <Card>

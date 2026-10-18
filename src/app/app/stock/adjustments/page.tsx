@@ -5,16 +5,22 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { loadLocations, loadVariantInfo } from "@/lib/server/variants";
 import { documentNumber, formatDelta } from "@/lib/domain/stock";
 import { formatDateTime } from "@/lib/format";
-import { logger } from "@/lib/logger";
 import { buttonClasses } from "@/components/ui/button";
 import { Alert, Badge, Card, EmptyState, PageHeader } from "@/components/ui/layout";
+import { Pagination } from "@/components/ui/list-controls";
+import { must } from "@/lib/server/query";
+import { listHref, pageCount, parsePage } from "@/lib/ui/list-params";
 import { fr } from "@/i18n/fr";
 import { ReviewButtons } from "./review-buttons";
 
 export const metadata: Metadata = { title: fr.stock.nav.adjustments };
 
-export default async function AdjustmentsPage({ searchParams }: { searchParams: Promise<{ created?: string }> }) {
-  const { created } = await searchParams;
+const PAGE_SIZE = 30;
+const COLUMNS = "id, number, kind, status, location_id, reason, created_at, reviewed_at, review_note";
+
+export default async function AdjustmentsPage({ searchParams }: { searchParams: Promise<{ created?: string; page?: string }> }) {
+  const { created, page: rawPage } = await searchParams;
+  const page = parsePage(rawPage);
   const context = await requireOrgContext();
   const orgId = context.membership.organizationId;
   const tz = context.membership.timezone;
@@ -22,26 +28,33 @@ export default async function AdjustmentsPage({ searchParams }: { searchParams: 
   const t = fr.stock.adjustments;
 
   const supabase = await createSupabaseServerClient();
-  const [{ data: adjustments, error }, locations] = await Promise.all([
+  // Pending adjustments (awaiting approval, always few) are shown on every
+  // page so none is missed; reviewed ones form the paginated history.
+  const [pendingResult, historyResult, locations] = await Promise.all([
+    supabase.from("stock_adjustments").select(COLUMNS).eq("organization_id", orgId).eq("status", "pending").order("number", { ascending: false }),
     supabase
       .from("stock_adjustments")
-      .select("id, number, kind, status, location_id, reason, created_at, reviewed_at, review_note")
+      .select(COLUMNS, { count: "exact" })
       .eq("organization_id", orgId)
-      .order("status", { ascending: false })
+      .neq("status", "pending")
       .order("number", { ascending: false })
-      .limit(100),
+      .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1),
     loadLocations(supabase, orgId),
   ]);
-  if (error) logger.error("stock.adjustments_load_failed", { organizationId: orgId, code: error.code });
-  const ids = (adjustments ?? []).map((a) => a.id);
-  const { data: lines } = ids.length
-    ? await supabase.from("stock_adjustment_lines").select("adjustment_id, variant_id, quantity_delta").in("adjustment_id", ids)
-    : { data: [] as { adjustment_id: string; variant_id: string; quantity_delta: number }[] };
+  const pending = must(pendingResult, "stock.adjustments_load_failed", { organizationId: orgId });
+  const history = must(historyResult, "stock.adjustments_load_failed", { organizationId: orgId });
+  const pages = pageCount(historyResult.count ?? 0, PAGE_SIZE);
+  const ids = [...pending, ...history].map((a) => a.id);
+  const lines = ids.length
+    ? must(
+        await supabase.from("stock_adjustment_lines").select("adjustment_id, variant_id, quantity_delta").in("adjustment_id", ids),
+        "stock.adjustment_lines_load_failed",
+        { organizationId: orgId },
+      )
+    : [];
   const variants = await loadVariantInfo(supabase, orgId, (lines ?? []).map((l) => l.variant_id));
   const locationName = new Map(locations.map((l) => [l.id, l.name]));
-  const pendingFirst = [...(adjustments ?? [])].sort(
-    (a, b) => Number(b.status === "pending") - Number(a.status === "pending") || b.number - a.number,
-  );
+  const pendingFirst = [...pending, ...history];
 
   return (
     <>
@@ -86,6 +99,7 @@ export default async function AdjustmentsPage({ searchParams }: { searchParams: 
             {a.status === "pending" && canReview ? <ReviewButtons adjustmentId={a.id} /> : null}
           </Card>
         ))}
+        <Pagination page={page} pages={pages} href={(n) => listHref("/app/stock/adjustments", { page: n })} />
       </div>
     </>
   );

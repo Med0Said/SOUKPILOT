@@ -7,13 +7,18 @@ import { loadLocations } from "@/lib/server/variants";
 import { documentNumber } from "@/lib/domain/stock";
 import { formatDateTime } from "@/lib/format";
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui/layout";
+import { Pagination } from "@/components/ui/list-controls";
+import { listHref, pageCount, parsePage } from "@/lib/ui/list-params";
 import { fr } from "@/i18n/fr";
 import { CreateCountForm } from "../create-count-form";
 import { must } from "@/lib/server/query";
 
 export const metadata: Metadata = { title: fr.stock.nav.counts };
 
-export default async function CountsPage() {
+const PAGE_SIZE = 30;
+
+export default async function CountsPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const page = parsePage((await searchParams).page);
   const context = await requireOrgContext();
   const orgId = context.membership.organizationId;
   const t = fr.stock.counts;
@@ -21,13 +26,14 @@ export default async function CountsPage() {
   const [countsResult, locations] = await Promise.all([
     supabase
       .from("stock_counts")
-      .select("id, number, location_id, status, note, created_at")
+      .select("id, number, location_id, status, note, created_at", { count: "exact" })
       .eq("organization_id", orgId)
       .order("number", { ascending: false })
-      .limit(50),
+      .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1),
     loadLocations(supabase, orgId),
   ]);
   const counts = must(countsResult, "stock.counts_load_failed", { organizationId: orgId });
+  const pages = pageCount(countsResult.count ?? 0, PAGE_SIZE);
   const name = new Map(locations.map((l) => [l.id, l.name]));
 
   return (
@@ -63,6 +69,7 @@ export default async function CountsPage() {
             </li>
           ))}
         </ul>
+        <Pagination page={page} pages={pages} href={(n) => listHref("/app/stock/counts", { page: n })} />
       </div>
     </>
   );

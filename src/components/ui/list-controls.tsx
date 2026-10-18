@@ -46,10 +46,21 @@ export function ListSummary({ total, exportHref }: { total: number; exportHref?:
   );
 }
 
-export function Pagination({ page, pages, href }: { page: number; pages: number; href: (page: number) => string }) {
+export function Pagination({
+  page,
+  pages,
+  href,
+  label = fr.lists.pagination,
+}: {
+  page: number;
+  pages: number;
+  href: (page: number) => string;
+  /** Distinct name when a page has several paginated lists. */
+  label?: string;
+}) {
   if (pages <= 1) return null;
   return (
-    <nav aria-label={fr.lists.pagination} className="mt-4 flex items-center justify-between gap-2 text-sm">
+    <nav aria-label={label} className="mt-4 flex items-center justify-between gap-2 text-sm">
       {page > 1 ? (
         <Link href={href(page - 1)} className={buttonClasses("secondary")} rel="prev">
           <ChevronLeft aria-hidden="true" className="size-4 rtl:rotate-180" />

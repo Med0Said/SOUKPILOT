@@ -8,6 +8,8 @@ import { formatTnd } from "@/lib/domain/money";
 import { documentNumber } from "@/lib/domain/stock";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { Alert, Badge, Breadcrumbs, Card, EmptyState, PageHeader } from "@/components/ui/layout";
+import { Pagination } from "@/components/ui/list-controls";
+import { listHref, pageCount, parsePage } from "@/lib/ui/list-params";
 import { fr } from "@/i18n/fr";
 import { SupplierForm } from "../supplier-form";
 import { SupplierPaymentForm } from "./supplier-payment-form";
@@ -20,7 +22,19 @@ function todayIn(timeZone: string): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 }
 
-export default async function SupplierPage({ params }: { params: Promise<{ supplierId: string }> }) {
+const PAGE_SIZE = 30;
+
+export default async function SupplierPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ supplierId: string }>;
+  searchParams: Promise<{ rpage?: string; ppage?: string }>;
+}) {
+  // Receipts and payments page independently.
+  const { rpage: rawReceiptsPage, ppage: rawPaymentsPage } = await searchParams;
+  const receiptsPage = parsePage(rawReceiptsPage);
+  const paymentsPage = parsePage(rawPaymentsPage);
   const { supplierId } = await params;
   if (!isUuid(supplierId)) notFound();
   const context = await requireOrgContext();
@@ -42,18 +56,20 @@ export default async function SupplierPage({ params }: { params: Promise<{ suppl
     supabase.rpc("supplier_balances", { p_organization_id: orgId }),
     supabase
       .from("stock_receipts")
-      .select("id, number, created_at, total_cost_millimes, lines_without_cost, reference")
+      .select("id, number, created_at, total_cost_millimes, lines_without_cost, reference", { count: "exact" })
       .eq("organization_id", orgId)
       .eq("supplier_id", supplierId)
       .order("number", { ascending: false })
-      .limit(100),
+      .range((receiptsPage - 1) * PAGE_SIZE, receiptsPage * PAGE_SIZE - 1),
     supabase
       .from("supplier_payments")
-      .select("id, kind, amount_millimes, paid_on, reference, method_id")
+      .select("id, kind, amount_millimes, paid_on, reference, method_id", { count: "exact" })
       .eq("organization_id", orgId)
       .eq("supplier_id", supplierId)
       .order("paid_on", { ascending: false })
-      .limit(100),
+      .order("created_at", { ascending: false })
+      .order("id")
+      .range((paymentsPage - 1) * PAGE_SIZE, paymentsPage * PAGE_SIZE - 1),
     supabase.from("payment_methods").select("id, label, is_active").eq("organization_id", orgId).order("sort_order"),
   ]);
   const balances = must(balancesResult, "suppliers.balances_load_failed", { organizationId: orgId });
@@ -62,6 +78,8 @@ export default async function SupplierPage({ params }: { params: Promise<{ suppl
   const methods = must(methodsResult, "suppliers.methods_load_failed", { organizationId: orgId });
   const b = (balances ?? []).find((x) => x.supplier_id === supplierId);
   const methodLabel = new Map((methods ?? []).map((m) => [m.id, m.label]));
+  const pageHref = (pages: { rpage: number; ppage: number }) =>
+    listHref(`/app/suppliers/${supplierId}`, { rpage: pages.rpage > 1 ? pages.rpage : null, ppage: pages.ppage > 1 ? pages.ppage : null });
 
   return (
     <>
@@ -116,6 +134,12 @@ export default async function SupplierPage({ params }: { params: Promise<{ suppl
               </li>
             ))}
           </ul>
+          <Pagination
+            page={paymentsPage}
+            pages={pageCount(paymentsResult.count ?? 0, PAGE_SIZE)}
+            href={(n) => pageHref({ rpage: receiptsPage, ppage: n })}
+            label={fr.lists.paginationPayments}
+          />
         </Card>
 
         <Card>
@@ -137,6 +161,12 @@ export default async function SupplierPage({ params }: { params: Promise<{ suppl
               </li>
             ))}
           </ul>
+          <Pagination
+            page={receiptsPage}
+            pages={pageCount(receiptsResult.count ?? 0, PAGE_SIZE)}
+            href={(n) => pageHref({ rpage: n, ppage: paymentsPage })}
+            label={fr.lists.paginationReceipts}
+          />
         </Card>
 
         {hasPermission(context, "suppliers.manage") ? (

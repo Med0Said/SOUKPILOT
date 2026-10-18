@@ -7,13 +7,18 @@ import { documentNumber } from "@/lib/domain/stock";
 import { formatDateTime } from "@/lib/format";
 import { buttonClasses } from "@/components/ui/button";
 import { Alert, Card, EmptyState, PageHeader } from "@/components/ui/layout";
+import { Pagination } from "@/components/ui/list-controls";
+import { listHref, pageCount, parsePage } from "@/lib/ui/list-params";
 import { fr } from "@/i18n/fr";
 import { must } from "@/lib/server/query";
 
 export const metadata: Metadata = { title: fr.stock.nav.transfers };
 
-export default async function TransfersPage({ searchParams }: { searchParams: Promise<{ created?: string }> }) {
-  const { created } = await searchParams;
+const PAGE_SIZE = 30;
+
+export default async function TransfersPage({ searchParams }: { searchParams: Promise<{ created?: string; page?: string }> }) {
+  const { created, page: rawPage } = await searchParams;
+  const page = parsePage(rawPage);
   const context = await requireOrgContext();
   const orgId = context.membership.organizationId;
   if (!hasPermission(context, "stock.transfer")) return <Alert tone="error">{fr.catalog.forbidden}</Alert>;
@@ -23,17 +28,22 @@ export default async function TransfersPage({ searchParams }: { searchParams: Pr
   const [transfersResult, locations] = await Promise.all([
     supabase
       .from("stock_transfers")
-      .select("id, number, from_location_id, to_location_id, note, created_at")
+      .select("id, number, from_location_id, to_location_id, note, created_at", { count: "exact" })
       .eq("organization_id", orgId)
       .order("number", { ascending: false })
-      .limit(100),
+      .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1),
     loadLocations(supabase, orgId),
   ]);
   const transfers = must(transfersResult, "stock.transfers_load_failed", { organizationId: orgId });
+  const pages = pageCount(transfersResult.count ?? 0, PAGE_SIZE);
   const ids = (transfers ?? []).map((tr) => tr.id);
-  const { data: lines } = ids.length
-    ? await supabase.from("stock_transfer_lines").select("transfer_id, variant_id, quantity").in("transfer_id", ids)
-    : { data: [] as { transfer_id: string; variant_id: string; quantity: number }[] };
+  const lines = ids.length
+    ? must(
+        await supabase.from("stock_transfer_lines").select("transfer_id, variant_id, quantity").in("transfer_id", ids),
+        "stock.transfer_lines_load_failed",
+        { organizationId: orgId },
+      )
+    : [];
   const variants = await loadVariantInfo(supabase, orgId, (lines ?? []).map((l) => l.variant_id));
   const name = new Map(locations.map((l) => [l.id, l.name]));
 
@@ -69,6 +79,7 @@ export default async function TransfersPage({ searchParams }: { searchParams: Pr
             {tr.note ? <p className="mt-2 text-sm text-muted">{tr.note}</p> : null}
           </Card>
         ))}
+        <Pagination page={page} pages={pages} href={(n) => listHref("/app/stock/transfers", { page: n })} />
       </div>
     </>
   );

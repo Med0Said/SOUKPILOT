@@ -8,11 +8,16 @@ import { formatDateTime } from "@/lib/format";
 import { logger } from "@/lib/logger";
 import { buttonClasses } from "@/components/ui/button";
 import { Alert, EmptyState, PageHeader } from "@/components/ui/layout";
+import { Pagination } from "@/components/ui/list-controls";
+import { listHref, pageCount, parsePage } from "@/lib/ui/list-params";
 import { fr } from "@/i18n/fr";
+
+const PAGE_SIZE = 30;
 
 export const metadata: Metadata = { title: fr.stock.nav.receipts };
 
-export default async function ReceiptsPage() {
+export default async function ReceiptsPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const page = parsePage((await searchParams).page);
   const context = await requireOrgContext();
   const orgId = context.membership.organizationId;
   const tz = context.membership.timezone;
@@ -22,10 +27,10 @@ export default async function ReceiptsPage() {
   const [receipts, locations, suppliers] = await Promise.all([
     supabase
       .from("stock_receipts")
-      .select("id, number, location_id, supplier_id, reference, created_at")
+      .select("id, number, location_id, supplier_id, reference, created_at", { count: "exact" })
       .eq("organization_id", orgId)
       .order("number", { ascending: false })
-      .limit(100),
+      .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1),
     loadLocations(supabase, orgId),
     supabase.from("suppliers").select("id, name").eq("organization_id", orgId),
   ]);
@@ -33,6 +38,7 @@ export default async function ReceiptsPage() {
   const locationName = new Map(locations.map((l) => [l.id, l.name]));
   const supplierName = new Map((suppliers.data ?? []).map((s) => [s.id, s.name]));
   const rows = receipts.data ?? [];
+  const pages = pageCount(receipts.count ?? 0, PAGE_SIZE);
 
   return (
     <>
@@ -62,6 +68,7 @@ export default async function ReceiptsPage() {
           </li>
         ))}
       </ul>
+      <Pagination page={page} pages={pages} href={(n) => listHref("/app/stock/receipts", { page: n })} />
     </>
   );
 }
