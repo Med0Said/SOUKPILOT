@@ -6,10 +6,10 @@ import { hasPermission, requireOrgContext } from "@/lib/auth/organization";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatTnd } from "@/lib/domain/money";
 import { documentNumber } from "@/lib/domain/stock";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { formatCalendarDay, formatDateTime } from "@/lib/format";
 import { Alert, Badge, Breadcrumbs, Card, EmptyState, PageHeader } from "@/components/ui/layout";
 import { Pagination } from "@/components/ui/list-controls";
-import { listHref, pageCount, parsePage } from "@/lib/ui/list-params";
+import { listHref, pageCount, parsePage, todayIn } from "@/lib/ui/list-params";
 import { fr } from "@/i18n/fr";
 import { SupplierForm } from "../supplier-form";
 import { SupplierPaymentForm } from "./supplier-payment-form";
@@ -17,10 +17,6 @@ import { must } from "@/lib/server/query";
 import { isUuid } from "@/lib/validation/ids";
 
 export const metadata: Metadata = { title: fr.nav.suppliers };
-
-function todayIn(timeZone: string): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-}
 
 const PAGE_SIZE = 30;
 
@@ -123,7 +119,7 @@ export default async function SupplierPage({
             {(payments ?? []).map((p) => (
               <li key={p.id} className="flex justify-between gap-3">
                 <span>
-                  {formatDate(`${p.paid_on}T12:00:00Z`, "UTC")} · {methodLabel.get(p.method_id)}
+                  {formatCalendarDay(p.paid_on)} · {methodLabel.get(p.method_id)}
                   {p.reference ? ` · ${p.reference}` : ""}
                   {p.kind === "refund" ? <Badge>{t.refund}</Badge> : null}
                 </span>

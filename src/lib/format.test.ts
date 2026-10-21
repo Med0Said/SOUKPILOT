@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatCalendarDay, formatDateTime, formatIsoDate, formatIsoDateTime } from "./format";
+import { formatCalendarDay, formatDate, formatDateTime, formatIsoDate, formatIsoDateTime } from "./format";
 
 describe("date formatting in the organization's time zone", () => {
   const lateEvening = "2026-03-10T23:30:00Z"; // 00:30 on the 11th in Tunis
@@ -20,5 +20,11 @@ describe("formatCalendarDay", () => {
   it("never shifts the day", () => {
     expect(formatCalendarDay("2026-03-01")).toBe("01/03/2026");
     expect(formatCalendarDay("2026-03-01", true)).toBe("01/03");
+  });
+
+  it("matches formatDate for a calendar day (purchase and supplier pages used the long form)", () => {
+    for (const day of ["2026-01-01", "2026-03-29", "2026-10-25", "2026-12-31"]) {
+      expect(formatCalendarDay(day)).toBe(formatDate(`${day}T12:00:00Z`, "UTC"));
+    }
   });
 });

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { buttonClasses } from "@/components/ui/button";
-import { Alert, ActionMessage, Badge, Card } from "@/components/ui/layout";
+import { Alert, ActionMessage, Badge, Card, Stat } from "@/components/ui/layout";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { commitImportAction, previewImportAction, type ImportPreviewState } from "@/app/_actions/catalog";
 import { fr } from "@/i18n/fr";
@@ -84,10 +84,10 @@ export function ImportWizard({ organizationId }: { organizationId: string }) {
           ) : null}
           {analysis.summary.totalRows > 0 ? (
             <dl className="mb-4 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
-              <Stat label={t.rowsOk} value={analysis.summary.okRows} />
-              <Stat label={t.rowsError} value={analysis.summary.errorRows} />
-              <Stat label={t.rowsSkipped} value={analysis.summary.skippedRows} />
-              <Stat label={t.toCreate} value={`${analysis.summary.products} / ${analysis.summary.variants}`} />
+              <Stat compact strong label={t.rowsOk} value={analysis.summary.okRows} />
+              <Stat compact strong label={t.rowsError} value={analysis.summary.errorRows} />
+              <Stat compact strong label={t.rowsSkipped} value={analysis.summary.skippedRows} />
+              <Stat compact strong label={t.toCreate} value={`${analysis.summary.products} / ${analysis.summary.variants}`} />
             </dl>
           ) : null}
 
@@ -157,11 +157,3 @@ function order(status: "ok" | "error" | "skipped"): number {
   return status === "error" ? 0 : status === "skipped" ? 1 : 2;
 }
 
-function Stat({ label, value }: { label: string; value: number | string }) {
-  return (
-    <div className="rounded-lg border border-border p-2">
-      <dt className="text-xs text-muted">{label}</dt>
-      <dd className="text-lg font-semibold tabular-nums">{value}</dd>
-    </div>
-  );
-}

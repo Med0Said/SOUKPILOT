@@ -88,6 +88,33 @@ export function EmptyState({ title, children, icon }: { title: string; children?
   );
 }
 
+/**
+ * A labelled figure inside a <dl>. `compact` is the in-card size (sales day
+ * summary, import preview); the default is the dashboard tile.
+ */
+export function Stat({
+  label,
+  value,
+  strong = false,
+  compact = false,
+}: {
+  label: string;
+  value: ReactNode;
+  strong?: boolean;
+  compact?: boolean;
+}) {
+  const box = compact ? "rounded-lg border border-border p-2" : "rounded-xl border border-border bg-surface p-3";
+  const text = compact
+    ? strong ? "text-lg font-semibold" : "font-medium"
+    : strong ? "text-xl font-semibold" : "text-lg font-medium";
+  return (
+    <div className={box}>
+      <dt className="text-xs text-muted">{label}</dt>
+      <dd className={`tabular-nums ${text}`}>{value}</dd>
+    </div>
+  );
+}
+
 export function Badge({ tone = "neutral", children }: { tone?: "neutral" | "success" | "warning" | "danger"; children: ReactNode }) {
   const styles = {
     neutral: "bg-background text-muted border-border",

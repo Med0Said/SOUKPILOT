@@ -3,7 +3,7 @@ import Link from "next/link";
 import { hasPermission, requireOrgContext } from "@/lib/auth/organization";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatTnd } from "@/lib/domain/money";
-import { formatDate } from "@/lib/format";
+import { formatCalendarDay } from "@/lib/format";
 import { logger } from "@/lib/logger";
 import { buttonClasses } from "@/components/ui/button";
 import { Alert, Badge, Card, EmptyState, PageHeader } from "@/components/ui/layout";
@@ -116,7 +116,7 @@ export default async function PurchasesPage({
                   <span className="font-medium">{poNumber(o.number, fr.purchases.draft)}</span>
                   <span className="block text-sm text-muted">
                     {o.suppliers?.name}
-                    {o.expected_date ? ` · ${t.expected(formatDate(`${o.expected_date}T12:00:00Z`, "UTC"))}` : ""}
+                    {o.expected_date ? ` · ${t.expected(formatCalendarDay(o.expected_date))}` : ""}
                   </span>
                 </span>
                 <span className="flex items-center gap-2">

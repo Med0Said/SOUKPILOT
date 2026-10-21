@@ -8,7 +8,7 @@ import { loadLocations, loadVariantInfo } from "@/lib/server/variants";
 import { formatTnd } from "@/lib/domain/money";
 import { poNumber, poStatusTone } from "@/lib/domain/purchasing";
 import { documentNumber } from "@/lib/domain/stock";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { formatCalendarDay, formatDateTime } from "@/lib/format";
 import { buttonClasses } from "@/components/ui/button";
 import { Alert, Badge, Breadcrumbs, Card, PageHeader } from "@/components/ui/layout";
 import { fr } from "@/i18n/fr";
@@ -74,7 +74,7 @@ export default async function PurchaseOrderPage({
             {po.expected_date ? (
               <>
                 <dt className="text-muted">{fr.purchases.form.expectedDate}</dt>
-                <dd>{formatDate(`${po.expected_date}T12:00:00Z`, "UTC")}</dd>
+                <dd>{formatCalendarDay(po.expected_date)}</dd>
               </>
             ) : null}
             {po.reference ? (

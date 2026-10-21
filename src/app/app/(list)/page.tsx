@@ -10,7 +10,7 @@ import { formatCalendarDay } from "@/lib/format";
 import { addDays, todayIn } from "@/lib/ui/list-params";
 import { logger } from "@/lib/logger";
 import { buttonClasses } from "@/components/ui/button";
-import { Badge, Card, PageHeader } from "@/components/ui/layout";
+import { Badge, Card, PageHeader, Stat } from "@/components/ui/layout";
 import { BarChart } from "@/components/charts/bar-chart";
 import { fr } from "@/i18n/fr";
 
@@ -203,11 +203,3 @@ export default async function DashboardPage() {
   );
 }
 
-function Stat({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
-  return (
-    <div className="rounded-xl border border-border bg-surface p-3">
-      <dt className="text-xs text-muted">{label}</dt>
-      <dd className={`tabular-nums ${strong ? "text-xl font-semibold" : "text-lg font-medium"}`}>{value}</dd>
-    </div>
-  );
-}

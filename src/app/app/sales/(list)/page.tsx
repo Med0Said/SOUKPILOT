@@ -6,7 +6,7 @@ import { formatTnd } from "@/lib/domain/money";
 import { formatDateTime } from "@/lib/format";
 import { logger } from "@/lib/logger";
 import { buttonClasses } from "@/components/ui/button";
-import { Badge, Card, EmptyState, PageHeader } from "@/components/ui/layout";
+import { Badge, Card, EmptyState, PageHeader, Stat } from "@/components/ui/layout";
 import { ListSummary, Pagination, SortSelect } from "@/components/ui/list-controls";
 import { SavedViews } from "@/components/ui/saved-views";
 import { SALES_DEFAULTS, canonical, salesFilters } from "@/lib/ui/list-filters";
@@ -95,10 +95,10 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
           {summary ? (
             <>
               <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-                <Stat label={t.count} value={String(summary.sales_count)} />
-                <Stat label={t.salesTotal} value={formatTnd(summary.sales_total_millimes)} />
-                <Stat label={t.returns} value={formatTnd(summary.returns_millimes)} />
-                <Stat label={t.net} value={formatTnd(summary.net_sales_millimes)} strong />
+                <Stat compact label={t.count} value={String(summary.sales_count)} />
+                <Stat compact label={t.salesTotal} value={formatTnd(summary.sales_total_millimes)} />
+                <Stat compact label={t.returns} value={formatTnd(summary.returns_millimes)} />
+                <Stat compact label={t.net} value={formatTnd(summary.net_sales_millimes)} strong />
               </dl>
               <h3 className="mb-2 mt-4 text-sm font-semibold">{t.byMethod}</h3>
               {summary.payments.length === 0 ? <p className="text-sm text-muted">{t.noPayments}</p> : null}
@@ -221,11 +221,3 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   );
 }
 
-function Stat({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
-  return (
-    <div className="rounded-lg border border-border p-2">
-      <dt className="text-xs text-muted">{label}</dt>
-      <dd className={`tabular-nums ${strong ? "text-lg font-semibold" : "font-medium"}`}>{value}</dd>
-    </div>
-  );
-}
