@@ -6,7 +6,7 @@
 export const frErrors = {
   appName: "SoukPilot",
   title: "Une erreur est survenue",
-  body: "La page n'a pas pu être chargée. Vos données ne sont pas perdues : réessayez dans un instant.",
+  body: "La page n'a pas pu être chargée. Vos données ne sont pas perdues : réessayez dans un instant.",
   retry: "Réessayer",
   reference: (digest: string) => `Réf. ${digest}`,
 } as const;

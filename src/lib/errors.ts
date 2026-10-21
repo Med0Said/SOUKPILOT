@@ -3,7 +3,7 @@
  * Supabase Auth error codes to French, user-facing messages.
  * Unknown errors get a generic message; details are logged server-side only.
  */
-const DB_ERROR_MESSAGES: Record<string, string> = {
+export const DB_ERROR_MESSAGES: Record<string, string> = {
   auth_required: "Votre session a expiré. Reconnectez-vous.",
   forbidden: "Vous n'avez pas l'autorisation d'effectuer cette action.",
   invalid_name: "Le nom doit contenir entre 2 et 120 caractères.",
@@ -37,13 +37,13 @@ const DB_ERROR_MESSAGES: Record<string, string> = {
   import_invalid_payload: "Le fichier ne contient aucun article valide.",
   import_too_large: "Import trop volumineux (2000 articles et 5000 variantes au maximum).",
   import_product_exists:
-    "Un article de l'import existe déjà dans la boutique (créé entre-temps ?). Recommencez l'aperçu.",
+    "Un article de l'import existe déjà dans la boutique (créé entre-temps ?). Recommencez l'aperçu.",
   insufficient_stock: "Stock insuffisant.",
   stock_not_tracked: "Le stock de cet article n'est pas suivi.",
   location_inactive: "Cet emplacement est inactif.",
   opening_already_recorded:
     "Un stock initial ou des mouvements existent déjà pour cet article à cet emplacement. Utilisez un ajustement.",
-  invalid_lines: "Lignes invalides : vérifiez les articles et les quantités (nombres entiers).",
+  invalid_lines: "Lignes invalides : vérifiez les articles et les quantités (nombres entiers).",
   duplicate_line: "Le même article apparaît deux fois.",
   reason_required: "Indiquez un motif (3 caractères minimum).",
   adjustment_not_found: "Ajustement introuvable.",
@@ -55,11 +55,11 @@ const DB_ERROR_MESSAGES: Record<string, string> = {
   count_empty: "Comptez au moins un article avant de soumettre.",
   same_location: "Choisissez deux emplacements différents.",
   invalid_parameter: "Requête invalide. Rechargez la page.",
-  invalid_discount: "Remise invalide : elle ne peut pas dépasser le montant.",
+  invalid_discount: "Remise invalide : elle ne peut pas dépasser le montant.",
   discount_not_allowed: "Remise supérieure au maximum autorisé pour votre rôle.",
-  variant_inactive: "Article inactif : il ne peut pas être vendu.",
+  variant_inactive: "Article inactif : il ne peut pas être vendu.",
   sale_amount_too_large: "Montant de vente trop élevé.",
-  invalid_payment: "Paiement invalide : vérifiez le mode et le montant.",
+  invalid_payment: "Paiement invalide : vérifiez le mode et le montant.",
   payment_exceeds_balance: "Le paiement dépasse le montant restant dû.",
   customer_required_for_credit: "Pour une vente non soldée (crédit), choisissez un client.",
   sale_not_found: "Vente introuvable.",
@@ -67,13 +67,13 @@ const DB_ERROR_MESSAGES: Record<string, string> = {
   sale_not_finalized: "Cette vente n'est pas validée.",
   return_exceeds_sold: "Quantité retournée supérieure à la quantité vendue restante.",
   refund_exceeds_balance: "Le remboursement dépasse le montant dû au client.",
-  sale_immutable: "Une vente validée ne peut pas être modifiée : utilisez un retour.",
+  sale_immutable: "Une vente validée ne peut pas être modifiée : utilisez un retour.",
   unit_cost_required: "Indiquez un prix d'achat pour chaque ligne.",
   supplier_inactive: "Ce fournisseur est inactif.",
   purchase_amount_too_large: "Montant de commande trop élevé.",
   purchase_order_not_found: "Bon de commande introuvable.",
-  purchase_order_locked: "Ce bon de commande est déjà passé : il ne peut plus être modifié.",
-  purchase_order_not_cancellable: "Impossible d'annuler : des marchandises ont déjà été reçues. Clôturez la commande.",
+  purchase_order_locked: "Ce bon de commande est déjà passé : il ne peut plus être modifié.",
+  purchase_order_not_cancellable: "Impossible d'annuler : des marchandises ont déjà été reçues. Clôturez la commande.",
   purchase_order_not_open: "Ce bon de commande n'attend plus de réception.",
   receipt_exceeds_ordered: "Quantité reçue supérieure au reste à recevoir.",
   invalid_date: "Date invalide.",
@@ -107,10 +107,10 @@ const CONSTRAINT_MESSAGES: Record<string, string> = {
   locations_organization_id_code_key: "Un emplacement utilise déjà ce code.",
 };
 
-const AUTH_ERROR_MESSAGES: Record<string, string> = {
+export const AUTH_ERROR_MESSAGES: Record<string, string> = {
   invalid_credentials: "E-mail ou mot de passe incorrect.",
   email_not_confirmed: "Confirmez d'abord votre adresse e-mail (vérifiez votre boîte de réception).",
-  weak_password: "Mot de passe trop faible : au moins 10 caractères, avec des lettres et des chiffres.",
+  weak_password: "Mot de passe trop faible : au moins 10 caractères, avec des lettres et des chiffres.",
   same_password: "Le nouveau mot de passe doit être différent de l'ancien.",
   over_request_rate_limit: "Trop de tentatives. Patientez quelques minutes puis réessayez.",
   over_email_send_rate_limit: "Trop d'e-mails envoyés. Patientez quelques minutes puis réessayez.",
