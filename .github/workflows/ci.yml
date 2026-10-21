@@ -49,6 +49,8 @@ jobs:
         run: npm run test:coverage
       - name: SQL function coverage
         run: node scripts/constraints/sql-coverage.mjs
+      - name: Every UI string is used
+        run: node scripts/constraints/i18n-unused.mjs
       - name: Every E2E spec uses the console/CSP guard
         run: node scripts/constraints/e2e-guard.mjs
       - name: Production dependencies (no high vulnerability)

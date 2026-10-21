@@ -37,6 +37,7 @@ The architecture rules in that list are reviewed by people; the guard catches th
 | Coverage `src/lib` | lines ≥ 89 %, statements ≥ 87 %, branches ≥ 82 %, functions ≥ 80 % | `vitest` thresholds (`vitest.config.mts`) | `check:task`, CI |
 | Coverage `src/lib/domain` (money, pricing, stock, reports, exports) | lines ≥ 94 %, statements ≥ 92 %, branches ≥ 84 %, functions ≥ 87 % | `vitest` thresholds | `check:task`, CI |
 | SQL function coverage | Every `public` SQL function is called by at least one DB test | `node scripts/constraints/sql-coverage.mjs` | `check:task`, CI |
+| Unused UI strings | Every string in `src/i18n/fr.ts` and `src/i18n/fr-errors.ts` is read by the app (a map read by a dynamic key counts as a whole) | `node scripts/constraints/i18n-unused.mjs` | `check:task`, CI |
 | E2E | All pass, against a production build and a real Supabase stack | `npm run test:e2e` | `check:full`, CI |
 | CSP / console guard | Every E2E spec uses the guarded `test` from `e2e/fixtures.ts` (fails on any console error, page exception or CSP violation) | `node scripts/constraints/e2e-guard.mjs` | `check:task`, CI |
 | Accessibility (WCAG 2.2 AA signals) | Zero contrast, name, heading, landmark, duplicate-id, lang and focus-indicator issues on login, dashboard, cart, stock, catalog, reports and palette in light/dark, desktop/phone; no horizontal scroll at 320 px; targets ≥ 24 px | `e2e/accessibility.spec.ts` | `check:full`, CI |

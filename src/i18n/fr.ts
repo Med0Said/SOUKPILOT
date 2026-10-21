@@ -1,5 +1,4 @@
 /** French UI strings. Keys are grouped by screen/module. */
-import { frErrors } from "./fr-errors";
 const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
 
 export const fr = {
@@ -105,7 +104,6 @@ export const fr = {
     customersOwing: (n: number, amount: string) => `${plural(n, "client doit", "clients doivent")} ${amount}`,
     suppliersOwed: (amount: string) => `Vous devez ${amount} aux fournisseurs`,
     lowStock: (n: number) => plural(n, "article en stock bas", "articles en stock bas"),
-    quickActions: "Accès rapides",
     myDrafts: (n: number) => plural(n, "vente en brouillon", "ventes en brouillon"),
     yourRole: "Votre rôle",
     organizationInfo: "Votre organisation",
@@ -168,7 +166,6 @@ export const fr = {
       `${amount} de ventes portent sur des articles sans prix d'achat : elles sont exclues de la marge. Renseignez les prix d'achat pour une marge complète.`,
     definitions:
       "Ventes nettes = ventes validées sur la période (remises déduites) − retours enregistrés sur la période. Marge brute estimée = ventes nettes − coût d'achat au moment de la vente, calculée uniquement sur les articles dont le coût est connu. Articles et catégories : ventes de la période moins les retours déjà faits sur ces ventes. Jours selon le fuseau horaire de l'organisation. Ces rapports ne sont pas une comptabilité.",
-    export: "Exporter (CSV)",
     exportDays: "Jours (CSV)",
     exportProducts: "Articles (CSV)",
     exportCategories: "Catégories (CSV)",
@@ -189,8 +186,6 @@ export const fr = {
   members: {
     title: "Membres",
     subtitle: "Les personnes ayant accès à cette organisation.",
-    name: "Nom",
-    email: "E-mail",
     role: "Rôle",
     joined: "Depuis le",
     you: "vous",
@@ -242,11 +237,6 @@ export const fr = {
     noCategory: "Sans catégorie",
     notTracked: "Stock non suivi",
     variantCount: (n: number) => plural(n, "variante", "variantes"),
-    resultCount: (n: number) => plural(n, "article", "articles"),
-    pagination: "Pagination",
-    previous: "Précédent",
-    next: "Suivant",
-    pageOf: (page: number, pages: number) => `Page ${page} sur ${pages}`,
     forbidden: "Cette page est réservée au propriétaire et aux gérants.",
   },
   productForm: {
@@ -775,12 +765,10 @@ export const fr = {
     // "Revenir", not "Annuler": the action being confirmed may itself be a
     // cancellation ("Annuler la commande").
     confirm: { title: "Confirmation", cancel: "Revenir", confirm: "Confirmer" },
-    error: { title: frErrors.title, body: frErrors.body, retry: frErrors.retry },
   },
   lists: {
     sortBy: "Trier par",
     filter: "Filtrer",
-    reset: "Réinitialiser",
     export: "Exporter (CSV)",
     exportCapped: (max: string) => `Seules les ${max} premières lignes seront exportées : affinez les filtres.`,
     results: (n: number) => plural(n, "résultat", "résultats"),
@@ -788,8 +776,6 @@ export const fr = {
     paginationHistory: "Pagination de l'historique des achats",
     paginationReceipts: "Pagination des réceptions",
     paginationPayments: "Pagination des paiements",
-    pendingFirst: "En attente de validation",
-    reviewed: "Historique",
     previous: "Précédent",
     next: "Suivant",
     pageOf: (page: number, pages: number) => `Page ${page} sur ${pages}`,
@@ -921,7 +907,6 @@ export const fr = {
     notFound: "Page introuvable.",
     notFoundHelp: "Cette page n'existe pas ou vous n'y avez pas accès.",
     backHome: "Retour à l'accueil",
-    retry: "Réessayer",
   },
 } as const;
 

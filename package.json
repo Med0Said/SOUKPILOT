@@ -22,7 +22,7 @@
     "db:migrate": "supabase migration up --local",
     "test:coverage": "vitest run --coverage",
     "check:fast": "npm run lint && npm run typecheck && node scripts/constraints/floor-guard.mjs",
-    "check:task": "npm run check:fast && npm run test:coverage && node scripts/constraints/sql-coverage.mjs && node scripts/constraints/e2e-guard.mjs",
+    "check:task": "npm run check:fast && npm run test:coverage && node scripts/constraints/sql-coverage.mjs && node scripts/constraints/i18n-unused.mjs && node scripts/constraints/e2e-guard.mjs",
     "check:full": "npm run check:task && npm run test:db:pg && npm run test:e2e && node scripts/constraints/bundle-budget.mjs .next-e2e && npm audit --omit=dev --audit-level=high"
   },
   "dependencies": {
