@@ -227,7 +227,6 @@ export const fr = {
     categories: "Catégories",
     searchLabel: "Rechercher",
     searchPlaceholder: "Nom, SKU ou code-barres",
-    searchButton: "Filtrer",
     category: "Catégorie",
     allCategories: "Toutes les catégories",
     showInactive: "Afficher les inactifs",
@@ -768,6 +767,8 @@ export const fr = {
   },
   lists: {
     sortBy: "Trier par",
+    // Button wording: "Filtrer" narrows the list on screen; choosing which day
+    // or period to show uses "Afficher" (reports.apply, sales.list.show).
     filter: "Filtrer",
     export: "Exporter (CSV)",
     exportCapped: (max: string) => `Seules les ${max} premières lignes seront exportées : affinez les filtres.`,

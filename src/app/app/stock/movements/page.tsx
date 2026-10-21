@@ -97,7 +97,7 @@ export default async function MovementsPage({
           </select>
         </div>
         <button type="submit" className={buttonClasses("secondary")}>
-          {fr.catalog.searchButton}
+          {fr.lists.filter}
         </button>
       </form>
       {variantId ? (

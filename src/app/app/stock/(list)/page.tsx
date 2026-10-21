@@ -140,7 +140,7 @@ export default async function StockOverviewPage({ searchParams }: { searchParams
             {t.lowOnly}
           </label>
           <button type="submit" className={buttonClasses("secondary")}>
-            {fr.catalog.searchButton}
+            {fr.lists.filter}
           </button>
         </form>
 

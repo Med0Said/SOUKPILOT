@@ -112,7 +112,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
           {t.showInactive}
         </label>
         <button type="submit" className={buttonClasses("secondary")}>
-          {t.searchButton}
+          {fr.lists.filter}
         </button>
       </form>
 
