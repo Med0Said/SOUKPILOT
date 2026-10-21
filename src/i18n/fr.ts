@@ -881,6 +881,7 @@ export const fr = {
       detail: (date: string, rate: string, currency: string) => `Taux indicatif du ${date} : 1 ${currency} = ${rate} DT. Source sans garantie ; le taux officiel est celui de la Banque Centrale de Tunisie.`,
       invalid: "Saisissez un montant positif.",
       unavailable: "Les taux sont indisponibles pour le moment.",
+      rateLimited: "Trop de conversions en une minute. Réessayez dans un instant.",
     },
     email: {
       name: "E-mails transactionnels",

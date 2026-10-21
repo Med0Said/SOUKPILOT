@@ -4,6 +4,7 @@
  * Providers answer from offline fixtures (SP_FAKE_INTEGRATIONS=1).
  */
 import { expect, test } from "./fixtures";
+import { apiAs } from "./api";
 import { createOrganization, newAccount, signUpAndConfirm } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -78,6 +79,25 @@ test("indicative currency conversion, then switching off", async ({ page }) => {
   await page.getByRole("button", { name: "Convertir" }).click();
   await expect(page.getByText(/100 EUR ≈ 333,333\s*DT/)).toBeVisible();
   await expect(page.getByText(/Taux indicatif du 2026-10-14/)).toBeVisible();
+
+  // Past the per-minute quota, the converter says so in its own words (not
+  // the barcode lookup's). The quota is spent through the API, as the owner;
+  // the fixed window can roll over between the two steps, hence the retry.
+  const api = await apiAs(owner);
+  const { data: org, error } = await api.from("organizations").select("id").single();
+  expect(error).toBeNull();
+  await expect(async () => {
+    for (let i = 0; i < 40; i++) {
+      const { error: quota } = await api.rpc("consume_integration_call", { p_organization_id: org!.id, p_integration: "exchange_rates" });
+      if (quota) {
+        expect(quota.message).toContain("rate_limited");
+        break;
+      }
+    }
+    await page.getByRole("button", { name: "Convertir" }).click();
+    await expect(page.getByText("Trop de conversions en une minute. Réessayez dans un instant.")).toBeVisible({ timeout: 3_000 });
+  }).toPass({ timeout: 30_000 });
+  await expect(page.getByText(/recherches/)).toHaveCount(0);
 
   await page.goto("/app/settings/integrations");
   const barcode = page.getByRole("region", { name: "Pré-remplissage par code-barres" });

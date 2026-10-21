@@ -77,7 +77,7 @@ export function CurrencyConverter({ organizationId }: { organizationId: string }
         ) : null}
         {result?.status === "invalid" ? <p className="text-danger">{t.invalid}</p> : null}
         {result?.status === "unavailable" ? <p className="text-muted">{t.unavailable}</p> : null}
-        {result?.status === "rate_limited" ? <p className="text-muted">{fr.integrations.barcode.rateLimited}</p> : null}
+        {result?.status === "rate_limited" ? <p className="text-muted">{t.rateLimited}</p> : null}
         {result?.status === "disabled" ? <p className="text-muted">{fr.integrations.disabled}</p> : null}
       </div>
     </details>
