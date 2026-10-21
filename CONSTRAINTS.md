@@ -85,5 +85,4 @@ Each exception names its owner and an expiry date; an expired exception fails it
 
 | ID | Rule | Path | Reason | Owner | Expires |
 | --- | --- | --- | --- | --- | --- |
-| E1 | sql-coverage | `public.find_catalog_conflicts` | Exercised only through the CSV import UI; a direct DB test is added in phase C | @said0 | 2026-11-30 |
 | E4 | npm audit (dev) | `eslint-config-next@16.4.0` → `braces` | Lint toolchain only, never shipped; fixed by the patch update (finding T7) in phase C | @said0 | 2026-11-30 |

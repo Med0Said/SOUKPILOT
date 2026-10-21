@@ -342,6 +342,42 @@ describe("search", () => {
     );
     expect(rows).toEqual([{ product_name: "Sac à main cuir" }]);
   });
+
+  it("find_catalog_conflicts reports existing names, SKUs and barcodes of the caller's organization only", async () => {
+    type Conflict = { kind: string; value: string };
+    const conflicts = (user: TestUser, organizationId: string, names: string[] | null, skus: string[] | null, barcodes: string[] | null) =>
+      queryAs<Conflict>(
+        db,
+        user,
+        "select kind, value from public.find_catalog_conflicts($1, $2, $3, $4) order by kind, value",
+        [organizationId, names, skus, barcodes],
+      );
+
+    // Names compare case-insensitively (returned lower-case), SKUs too
+    // (returned upper-case), barcodes exactly. Unknown values are not reported.
+    expect(
+      await conflicts(
+        manager,
+        org,
+        ["SAC À MAIN CUIR", "Nouveau sac"],
+        ["sac_coton", "SAC-X", "INCONNU"],
+        ["6191111111111", "6191111111112"],
+      ),
+    ).toEqual([
+      { kind: "barcode", value: "6191111111111" },
+      { kind: "name", value: "sac à main cuir" },
+      { kind: "sku", value: "SAC_COTON" },
+    ]);
+    // "SAC-X" belongs to the other tenant: invisible here, reported there.
+    expect(await conflicts(otherOwner, otherOrg, null, ["sac-x"], null)).toEqual([{ kind: "sku", value: "SAC-X" }]);
+    // Null arrays mean "nothing to check", not an error.
+    expect(await conflicts(manager, org, null, null, null)).toEqual([]);
+    // Asking for another tenant's organization returns nothing (RLS).
+    expect(await conflicts(manager, otherOrg, ["Sac concurrent"], ["SAC-X"], null)).toEqual([]);
+    await expect(
+      asAnon(db, (tx) => tx.query("select * from public.find_catalog_conflicts($1, $2, $3, $4)", [org, ["x"], null, null])),
+    ).rejects.toThrow(/permission denied/);
+  });
 });
 
 describe("catalog import", () => {
