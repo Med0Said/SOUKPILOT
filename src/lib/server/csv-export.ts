@@ -7,6 +7,7 @@ import { toCsv } from "@/lib/domain/csv";
 import { EXPORT_MAX_ROWS, exportFileName, type CsvTable } from "@/lib/domain/exports";
 import { todayIn } from "@/lib/ui/list-params";
 import { logger } from "@/lib/logger";
+import { fr } from "@/i18n/fr";
 
 /**
  * Export route guard: signed in, member of an organization, and (optionally)
@@ -14,10 +15,10 @@ import { logger } from "@/lib/logger";
  * own client, so RLS applies exactly as on screen.
  */
 export async function exportContext(permission?: Permission): Promise<OrgContext | NextResponse> {
-  if (!(await getCurrentUser())) return new NextResponse("Non autorisé", { status: 401 });
+  if (!(await getCurrentUser())) return new NextResponse(fr.common.unauthorized, { status: 401 });
   const context = await getActiveContext();
-  if (!context) return new NextResponse("Aucune organisation", { status: 403 });
-  if (permission && !hasPermission(context, permission)) return new NextResponse("Accès refusé", { status: 403 });
+  if (!context) return new NextResponse(fr.common.noOrganization, { status: 403 });
+  if (permission && !hasPermission(context, permission)) return new NextResponse(fr.common.forbidden, { status: 403 });
   return context;
 }
 

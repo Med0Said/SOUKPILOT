@@ -17,7 +17,7 @@ import { Button } from "./button";
  */
 export function SubmitButton({
   children,
-  pendingLabel = "Patientez…",
+  pendingLabel = fr.ui.pending,
   variant = "primary",
   className = "",
   confirmMessage,

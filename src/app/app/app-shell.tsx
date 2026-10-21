@@ -327,7 +327,7 @@ function OrganizationSwitcher({
           ))}
         </select>
         <button type="submit" className="min-h-10 rounded-lg border border-border bg-surface px-3 text-sm">
-          OK
+          {fr.nav.switchOrganizationSubmit}
         </button>
       </div>
       <p className="text-xs text-muted">{organization.role}</p>

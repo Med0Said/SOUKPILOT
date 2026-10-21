@@ -5,6 +5,8 @@ export const fr = {
   app: {
     name: "SoukPilot",
     tagline: "Articles, stock, achats, ventes et marges — au même endroit, sur téléphone ou ordinateur.",
+    headline: "La gestion simple pour les commerces tunisiens.",
+    pilotNotice: "Version pilote — en cours de développement.",
   },
   nav: {
     dashboard: "Tableau de bord",
@@ -22,6 +24,7 @@ export const fr = {
     invitations: "Mes invitations",
     signOut: "Se déconnecter",
     switchOrganization: "Organisation active",
+    switchOrganizationSubmit: "OK",
     mainNavigation: "Navigation principale",
     groupSell: "Vente",
     groupGoods: "Stock & achats",
@@ -764,6 +767,7 @@ export const fr = {
     // "Revenir", not "Annuler": the action being confirmed may itself be a
     // cancellation ("Annuler la commande").
     confirm: { title: "Confirmation", cancel: "Revenir", confirm: "Confirmer" },
+    pending: "Patientez…",
   },
   lists: {
     sortBy: "Trier par",
@@ -909,6 +913,10 @@ export const fr = {
     notFound: "Page introuvable.",
     notFoundHelp: "Cette page n'existe pas ou vous n'y avez pas accès.",
     backHome: "Retour à l'accueil",
+    // Plain-text bodies of refused file downloads (exports, import template).
+    unauthorized: "Non autorisé",
+    noOrganization: "Aucune organisation",
+    forbidden: "Accès refusé",
   },
 } as const;
 

@@ -8,7 +8,7 @@ export default function HomePage() {
     <main className="mx-auto flex min-h-dvh max-w-2xl flex-col justify-center gap-6 px-4 py-12">
       <Logo />
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-        La gestion simple pour les commerces tunisiens.
+        {fr.app.headline}
       </h1>
       <p className="text-lg text-muted">{fr.app.tagline}</p>
       <div className="flex flex-wrap gap-3">
@@ -19,7 +19,7 @@ export default function HomePage() {
           {fr.auth.loginLink}
         </Link>
       </div>
-      <p className="text-xs text-muted">Version pilote — en cours de développement.</p>
+      <p className="text-xs text-muted">{fr.app.pilotNotice}</p>
     </main>
   );
 }
