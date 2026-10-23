@@ -92,7 +92,7 @@ test("owner sets up the shop, sells, gets paid partially, takes a return", async
   await expect(page.getByLabel("Client", { exact: true })).toHaveValue(/[0-9a-f-]{36}/);
   await page.getByRole("button", { name: "+ Ajouter un paiement" }).click();
   await page.getByLabel("Montant (DT)").fill("30");
-  await expect(page.getByText(/Reste à payer : 20,000\s*DT/)).toBeVisible();
+  await expect(page.getByText(/Reste à payer\s:\s20,000\s*DT/)).toBeVisible();
     await clickAndConfirm(page, page.getByRole("button", { name: "Valider la vente" }));
   await expect(page.getByText("Vente enregistrée.")).toBeVisible();
   saleUrl = new URL(page.url()).pathname;
